@@ -37,6 +37,7 @@ import { UpdaterBanner } from './updater/UpdaterBanner';
 import { LibraryManager } from './library/LibraryManager';
 import { registerLibraryIpc } from './library/library.ipc';
 
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
 if (process.platform === 'darwin') app.commandLine.appendSwitch('use-angle', 'metal');
 
 // Handle Squirrel.Windows install/uninstall shortcuts
