@@ -37,11 +37,7 @@ import { UpdaterBanner } from './updater/UpdaterBanner';
 import { LibraryManager } from './library/LibraryManager';
 import { registerLibraryIpc } from './library/library.ipc';
 
-// Enable WebGPU for video enhancement (Anime4K upscaling + filters)
-app.commandLine.appendSwitch('enable-unsafe-webgpu');
-app.commandLine.appendSwitch('enable-features', 'Vulkan,WebGPU');
-app.commandLine.appendSwitch('use-angle', 'metal');
-app.commandLine.appendSwitch('ignore-gpu-blocklist');
+if (process.platform === 'darwin') app.commandLine.appendSwitch('use-angle', 'metal');
 
 // Handle Squirrel.Windows install/uninstall shortcuts
 if (started) {
