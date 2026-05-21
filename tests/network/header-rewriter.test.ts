@@ -1,46 +1,46 @@
 import { describe, it, expect } from 'vitest';
-import { HEADER_RULES, matchesHeaderRule, FIREFOX_UA } from '../../src/network/header-rules';
+import { HEADER_RULES, matchesHeaderRule, FIREFOX_UA, CDN } from '../../src/network/header-rules';
 
 describe('HeaderRewriterService', () => {
   it('HEADER_RULES array contains at least 2 rules', () => {
     expect(HEADER_RULES.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('sets referer and user-agent for tau-video.xyz/file/* requests', () => {
+  it('sets referer and user-agent for CDN/file/* requests', () => {
     const fileRule = HEADER_RULES.find((r) =>
       r.urlPatterns.some((p) => p.includes('/file/*'))
     );
     expect(fileRule).toBeDefined();
-    expect(fileRule?.headers.referer).toBe('https://tau-video.xyz/');
+    expect(fileRule?.headers.referer).toBe(`https://${CDN}/`);
     expect(fileRule?.headers.userAgent).toBe(FIREFOX_UA);
   });
 
-  it('sets referer for tau-video.xyz/api/* requests', () => {
+  it('sets referer for CDN/api/* requests', () => {
     const apiRule = HEADER_RULES.find((r) =>
       r.urlPatterns.some((p) => p.includes('/api/*'))
     );
     expect(apiRule).toBeDefined();
-    expect(apiRule?.headers.referer).toBe('https://tau-video.xyz/');
+    expect(apiRule?.headers.referer).toBe(`https://${CDN}/`);
   });
 
-  it('HEADER_RULES contains a rule with urlPatterns including *://*.tau-video.xyz/file/*', () => {
+  it('HEADER_RULES contains a rule with urlPatterns including *://*.[CDN]/file/*', () => {
     const hasFilePattern = HEADER_RULES.some((r) =>
-      r.urlPatterns.includes('*://*.tau-video.xyz/file/*')
+      r.urlPatterns.includes(`*://*.${CDN}/file/*`)
     );
     expect(hasFilePattern).toBe(true);
   });
 
-  it('HEADER_RULES contains a rule with urlPatterns including *://*.tau-video.xyz/api/*', () => {
+  it('HEADER_RULES contains a rule with urlPatterns including *://*.[CDN]/api/*', () => {
     const hasApiPattern = HEADER_RULES.some((r) =>
-      r.urlPatterns.includes('*://*.tau-video.xyz/api/*')
+      r.urlPatterns.includes(`*://*.${CDN}/api/*`)
     );
     expect(hasApiPattern).toBe(true);
   });
 
-  it('matchesHeaderRule returns file rule for cdn.tau-video.xyz/file/video.mp4', () => {
-    const match = matchesHeaderRule('https://cdn.tau-video.xyz/file/video.mp4', HEADER_RULES);
+  it('matchesHeaderRule returns file rule for cdn.[CDN]/file/video.mp4', () => {
+    const match = matchesHeaderRule(`https://cdn.${CDN}/file/video.mp4`, HEADER_RULES);
     expect(match).not.toBeNull();
-    expect(match?.headers.referer).toBe('https://tau-video.xyz/');
+    expect(match?.headers.referer).toBe(`https://${CDN}/`);
     expect(match?.headers.userAgent).toBe(FIREFOX_UA);
   });
 
@@ -55,9 +55,9 @@ describe('HeaderRewriterService', () => {
   });
 
   it('applyHeaders builds correct referer and user-agent for matched rules', () => {
-    const match = matchesHeaderRule('https://cdn.tau-video.xyz/file/test.mp4', HEADER_RULES);
+    const match = matchesHeaderRule(`https://cdn.${CDN}/file/test.mp4`, HEADER_RULES);
     expect(match).not.toBeNull();
-    expect(match!.headers.referer).toBe('https://tau-video.xyz/');
+    expect(match!.headers.referer).toBe(`https://${CDN}/`);
     expect(match!.headers.userAgent).toBe(FIREFOX_UA);
   });
 });

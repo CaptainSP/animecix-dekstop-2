@@ -1,10 +1,11 @@
-import { AdBlocker } from './ad-blocker';
+import { AdBlocker, isWhitelisted, getEnvVariable, DEFAULT_SITE_URL } from './ad-blocker';
 import { getPlayerBaseUrl } from '../player/tau-localhost';
 
-// First-party domains that must never be blocked
-const SITE_DOMAIN = new URL(import.meta.env.VITE_SITE_URL).hostname;
-const CDN_DOMAIN = import.meta.env.VITE_CDN_DOMAIN;
-const WHITELIST_PATTERNS = [SITE_DOMAIN, CDN_DOMAIN, 'localhost', 'tau-player.localhost'];
+// Resolve the API base URL safely, falling back to the default site URL. Ensure no trailing slash.
+const API_BASE_URL = getEnvVariable('VITE_API_BASE_URL', DEFAULT_SITE_URL).replace(/\/$/, '');
+// First‑party domains are resolved inside ad-blocker with safe defaults.
+// This file now relies on the shared `isWhitelisted` utility.
+// No local constants are needed.
 
 /**
  * Pure function: returns true if the URL should be redirected from the
@@ -12,7 +13,7 @@ const WHITELIST_PATTERNS = [SITE_DOMAIN, CDN_DOMAIN, 'localhost', 'tau-player.lo
  * Only matches https://tau-video.xyz/embed/* and https://tau-video.xyz/embed-2/*
  */
 export function isIframeRedirect(url: string): boolean {
-  const base = import.meta.env.VITE_API_BASE_URL;
+  const base = API_BASE_URL;
   return (
     url.startsWith(base + '/embed/') ||
     url.startsWith(base + '/embed-2/')
@@ -38,7 +39,8 @@ export function buildRedirectUrl(url: string): string {
  * Returns true if the URL belongs to a first-party domain that must not be blocked.
  */
 function isFirstParty(url: string): boolean {
-  return WHITELIST_PATTERNS.some((pattern) => url.includes(pattern));
+  // Delegates to the centralized whitelist logic.
+  return isWhitelisted(url);
 }
 
 /**
@@ -85,7 +87,7 @@ export function setupRequestInterception(adBlocker: AdBlocker): void {
       }
 
       // 3. Ad blocker
-      if (adBlocker.shouldBlock(url)) {
+      if (adBlocker && typeof adBlocker.shouldBlock === 'function' && adBlocker.shouldBlock(url)) {
         callback({ cancel: true });
         return;
       }

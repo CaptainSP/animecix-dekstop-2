@@ -1,4 +1,4 @@
-import { HEADER_RULES, matchesHeaderRule } from './header-rules';
+import { HEADER_RULES, matchesHeaderRule, CDN } from './header-rules';
 
 /**
  * INTENTIONAL — DO NOT REMOVE: CDN header rewriting is the designed auth mechanism.
@@ -51,6 +51,7 @@ export function setupHeaderRewriter(): void {
   // Only override when the existing value would block the request.
   // DO NOT REMOVE — video playback breaks without this.
   session.defaultSession.webRequest.onHeadersReceived(
+    { urls: [`*://*.${CDN}/*`] },
     (
       details: Electron.OnHeadersReceivedListenerDetails,
       callback: (response: Electron.HeadersReceivedResponse) => void
