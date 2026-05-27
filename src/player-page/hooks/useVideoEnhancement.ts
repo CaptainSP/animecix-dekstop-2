@@ -18,6 +18,7 @@ export interface EnhancementStats {
 const DEFAULT_FILTERS: ColorFilters = { brightness: 1, contrast: 1, saturate: 1 };
 const STORAGE_KEY = 'video-enhancement-preset';
 const FILTERS_KEY = 'video-enhancement-filters';
+const isLinux = navigator.platform.toLowerCase().includes('linux');
 
 const QUAD_WGSL = `
 struct VO { @builtin(position) pos: vec4f };
@@ -117,6 +118,10 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
   const startRendering = useCallback(async (selectedPreset: UpscalePreset) => {
     const container = containerRef.current;
     if (!container || selectedPreset === 'off' || !navigator.gpu) return;
+    if (isLinux) {
+      applyFilters(container, filtersRef.current, selectedPreset, false);
+      return;
+    }
 
     const video = document.querySelector('video') as HTMLVideoElement | null;
     if (!video || video.readyState < 2) return;
