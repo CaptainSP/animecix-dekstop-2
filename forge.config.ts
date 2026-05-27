@@ -5,6 +5,7 @@ import { MakerDMG } from '@electron-forge/maker-dmg';
 import { MakerDeb } from '@electron-forge/maker-deb';
 import { MakerRpm } from '@electron-forge/maker-rpm';
 import { MakerAppImage } from '@reforged/maker-appimage';
+import { MakerFlatpak } from '@electron-forge/maker-flatpak';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
@@ -130,6 +131,29 @@ const config: ForgeConfig = {
         bin: 'AnimeciX',
         icon: 'assets/icon.png',
         categories: ['Video'],
+      },
+    }),
+    new MakerFlatpak({
+      options: {
+        id: 'com.onmuapps.animecix',
+        productName: 'AnimeciX',
+        genericName: 'Anime Player',
+        description: 'AnimeciX desktop app — anime streaming, downloading, and offline playback',
+        bin: 'AnimeciX',
+        icon: 'assets/icon.png',
+        categories: ['Video', 'AudioVideo'],
+        mimeType: ['x-scheme-handler/animecix'],
+        files: [],
+        finishArgs: [
+          '--share=network',
+          '--share=ipc',
+          '--socket=x11',
+          '--socket=wayland',
+          '--socket=pulseaudio',
+          '--device=dri',
+          '--filesystem=xdg-download',
+          '--filesystem=xdg-run/app/com.discordapp.Discord:create',
+        ],
       },
     }),
   ],
