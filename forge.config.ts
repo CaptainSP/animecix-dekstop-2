@@ -144,6 +144,10 @@ const config: ForgeConfig = {
         categories: ['Video', 'AudioVideo'],
         mimeType: ['x-scheme-handler/animecix'],
         files: [],
+        runtime: 'org.freedesktop.Platform',
+        runtimeVersion: '24.08',
+        sdk: 'org.freedesktop.Sdk',
+        baseVersion: '24.08',
         finishArgs: [
           '--share=network',
           '--share=ipc',
