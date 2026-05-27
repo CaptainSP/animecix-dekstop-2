@@ -41,6 +41,7 @@ interface Session {
 }
 
 function loadPreset(): UpscalePreset {
+  if (!supportsWebGpuCanvas) return 'off';
   return (localStorage.getItem(STORAGE_KEY) as UpscalePreset) || 'off';
 }
 
@@ -117,12 +118,11 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
 
   const startRendering = useCallback(async (selectedPreset: UpscalePreset) => {
     const container = containerRef.current;
-    if (!container || selectedPreset === 'off' || !navigator.gpu) return;
     if (!supportsWebGpuCanvas) {
       destroySession();
-      applyFilters(container, filtersRef.current, selectedPreset, false);
       return;
     }
+    if (!container || selectedPreset === 'off' || !navigator.gpu) return;
 
     const video = document.querySelector('video') as HTMLVideoElement | null;
     if (!video || video.readyState < 2) return;
@@ -338,11 +338,25 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
   useEffect(() => {
     if (!supportsWebGpuCanvas) {
       destroySession();
+      localStorage.setItem(STORAGE_KEY, 'off');
+      setPresetState('off');
+      presetRef.current = 'off';
+      applyFilters(containerRef.current, filters, 'off', false);
+      return;
     }
     applyFilters(containerRef.current, filters, preset, hasOutput);
   }, [containerRef, destroySession, filters, hasOutput, preset]);
 
   const setPreset = useCallback((newPreset: UpscalePreset) => {
+    if (!supportsWebGpuCanvas) {
+      destroySession();
+      setPresetState('off');
+      presetRef.current = 'off';
+      localStorage.setItem(STORAGE_KEY, 'off');
+      applyFilters(containerRef.current, filtersRef.current, 'off', false);
+      return;
+    }
+
     setPresetState(newPreset);
     presetRef.current = newPreset;
     hasOutputRef.current = false;
@@ -363,7 +377,11 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
 
   return {
     preset, setPreset, filters, setFilters,
-    isActive, hasOutput, stats, panelOpen, setPanelOpen,
+    isActive: supportsWebGpuCanvas && isActive,
+    hasOutput: supportsWebGpuCanvas && hasOutput,
+    stats,
+    panelOpen,
+    setPanelOpen,
   };
 }
 
