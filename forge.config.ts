@@ -20,6 +20,33 @@ import * as path from 'node:path';
 // copy these modules (and their transitive runtime deps) in afterCopy.
 const EXTERNAL_NATIVE_DEPS = ['better-sqlite3', 'bufferutil', 'utf-8-validate'];
 
+const flatpakOptions = {
+  id: 'com.onmuapps.animecix',
+  productName: 'AnimeciX',
+  genericName: 'Anime Player',
+  description: 'AnimeciX desktop app — anime streaming, downloading, and offline playback',
+  bin: 'AnimeciX',
+  icon: 'assets/icon.png',
+  categories: ['Video', 'AudioVideo'] as ('Video' | 'AudioVideo')[],
+  mimeType: ['x-scheme-handler/animecix'],
+  files: [] as [string, string][],
+  runtime: 'org.freedesktop.Platform',
+  runtimeVersion: '24.08',
+  sdk: 'org.freedesktop.Sdk',
+  base: 'org.electronjs.Electron2.BaseApp',
+  baseVersion: '24.08',
+  finishArgs: [
+    '--share=network',
+    '--share=ipc',
+    '--socket=x11',
+    '--socket=wayland',
+    '--socket=pulseaudio',
+    '--device=dri',
+    '--filesystem=xdg-download',
+    '--filesystem=xdg-run/app/com.discordapp.Discord:create',
+  ],
+};
+
 const config: ForgeConfig = {
   packagerConfig: {
     appBundleId: 'com.onmuapps.animecix',              // D-26
@@ -134,31 +161,8 @@ const config: ForgeConfig = {
       },
     }),
     new MakerFlatpak({
-      options: {
-        id: 'com.onmuapps.animecix',
-        productName: 'AnimeciX',
-        genericName: 'Anime Player',
-        description: 'AnimeciX desktop app — anime streaming, downloading, and offline playback',
-        bin: 'AnimeciX',
-        icon: 'assets/icon.png',
-        categories: ['Video', 'AudioVideo'],
-        mimeType: ['x-scheme-handler/animecix'],
-        files: [],
-        runtime: 'org.freedesktop.Platform',
-        runtimeVersion: '24.08',
-        sdk: 'org.freedesktop.Sdk',
-        baseVersion: '24.08',
-        finishArgs: [
-          '--share=network',
-          '--share=ipc',
-          '--socket=x11',
-          '--socket=wayland',
-          '--socket=pulseaudio',
-          '--device=dri',
-          '--filesystem=xdg-download',
-          '--filesystem=xdg-run/app/com.discordapp.Discord:create',
-        ],
-      },
+      options: flatpakOptions,
+      ...flatpakOptions,
     }),
   ],
   publishers: [
