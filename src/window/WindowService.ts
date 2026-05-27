@@ -4,6 +4,22 @@ import { StorageService } from '../storage/StorageService';
 import type { TrayManager } from '../download/TrayManager';
 
 const isMac = process.platform === 'darwin';
+const LOCAL_DEV_SITE_URL = 'http://localhost:4200';
+const DEFAULT_SITE_URL = 'https://animecix.tv';
+
+function getSiteUrl(): string {
+  const configuredUrl = import.meta.env.VITE_SITE_URL;
+  if (!configuredUrl || configuredUrl.includes('your-site.com')) {
+    return DEFAULT_SITE_URL;
+  }
+
+  try {
+    const parsed = new URL(configuredUrl);
+    return parsed.toString().replace(/\/$/, '');
+  } catch {
+    return DEFAULT_SITE_URL;
+  }
+}
 
 // Debounce helper
 function debounce<T extends (...args: Parameters<T>) => void>(fn: T, ms: number): T {
@@ -106,10 +122,18 @@ export function createWindow(storage: StorageService): BrowserWindow {
   });
 
   // Dev: load local Angular dev server; Production: load website
-  const startUrl = app.isPackaged
-    ? import.meta.env.VITE_SITE_URL
-    : 'http://localhost:4200';
+  const siteUrl = getSiteUrl();
+  const startUrl = app.isPackaged ? siteUrl : LOCAL_DEV_SITE_URL;
   void win.loadURL(startUrl);
+
+  if (!app.isPackaged) {
+    win.webContents.on('did-fail-load', (_event, _errorCode, _errorDescription, validatedURL, isMainFrame) => {
+      if (isMainFrame && validatedURL.startsWith(LOCAL_DEV_SITE_URL)) {
+        console.warn(`Local website dev server is unavailable at ${LOCAL_DEV_SITE_URL}; loading ${siteUrl}.`);
+        void win.loadURL(siteUrl);
+      }
+    });
+  }
 
   // Persist bounds on resize/move — debounced, skip while maximized
   const saveBounds = debounce(() => {
@@ -147,7 +171,7 @@ export function createWindow(storage: StorageService): BrowserWindow {
   // Restrict navigation to trusted origins — allow OAuth providers for Google login flow.
   // Google login: animecix.tv opens accounts.google.com, user authenticates,
   // Google redirects to animecix:// deeplink, app handles it via deep-link.ts.
-  const SITE_HOST = new URL(import.meta.env.VITE_SITE_URL).hostname;
+  const SITE_HOST = new URL(siteUrl).hostname;
   win.webContents.on('will-navigate', (event, url) => {
     try {
       const parsed = new URL(url);
