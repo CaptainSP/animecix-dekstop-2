@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Anime4KPipeline } from 'anime4k-webgpu';
-import { CASPipeline, DebandPipeline } from '../video-enhancement/custom-pipelines';
 
 export type UpscalePreset = 'off' | 'light' | 'balanced' | 'maximum';
 
@@ -21,16 +20,16 @@ const STORAGE_KEY = 'video-enhancement-preset';
 const FILTERS_KEY = 'video-enhancement-filters';
 
 const QUAD_WGSL = `
-struct VO { @builtin(position) pos: vec4f, @location(0) uv: vec2f };
+struct VO { @builtin(position) pos: vec4f };
 @vertex fn vs(@builtin(vertex_index) i: u32) -> VO {
   var p = array<vec2f,6>(vec2f(-1,-1),vec2f(1,-1),vec2f(-1,1),vec2f(-1,1),vec2f(1,-1),vec2f(1,1));
-  var u = array<vec2f,6>(vec2f(0,1),vec2f(1,1),vec2f(0,0),vec2f(0,0),vec2f(1,1),vec2f(1,0));
-  var o: VO; o.pos = vec4f(p[i],0,1); o.uv = u[i]; return o;
+  var o: VO; o.pos = vec4f(p[i],0,1); return o;
 }
-@group(0) @binding(0) var s: sampler;
-@group(0) @binding(1) var t: texture_2d<f32>;
-@fragment fn fs(@location(0) uv: vec2f) -> @location(0) vec4f {
-  return textureSample(t, s, uv);
+@group(0) @binding(0) var t: texture_2d<f32>;
+@fragment fn fs(@builtin(position) pos: vec4f) -> @location(0) vec4f {
+  let dim = textureDimensions(t);
+  let xy = clamp(vec2i(pos.xy), vec2i(0), vec2i(dim) - vec2i(1));
+  return clamp(textureLoad(t, xy, 0), vec4f(0), vec4f(1));
 }`;
 
 interface Session {
@@ -164,8 +163,7 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
 
       const renderBindGroupLayout = device.createBindGroupLayout({
         entries: [
-          { binding: 0, visibility: GPUShaderStage.FRAGMENT, sampler: { type: 'non-filtering' } },
-          { binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: { sampleType: 'unfilterable-float' } },
+          { binding: 0, visibility: GPUShaderStage.FRAGMENT, texture: { sampleType: 'unfilterable-float' } },
         ],
       });
       const module = device.createShaderModule({ code: QUAD_WGSL });
@@ -174,13 +172,11 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
         vertex: { module, entryPoint: 'vs' },
         fragment: { module, entryPoint: 'fs', targets: [{ format }] },
       });
-      const sampler = device.createSampler();
       const lastOutput = pipelines[pipelines.length - 1].getOutputTexture();
       const bindGroup = device.createBindGroup({
         layout: renderBindGroupLayout,
         entries: [
-          { binding: 0, resource: sampler },
-          { binding: 1, resource: lastOutput.createView() },
+          { binding: 0, resource: lastOutput.createView() },
         ],
       });
 
@@ -368,38 +364,28 @@ function buildPipelines(
   inputTexture: GPUTexture,
   preset: UpscalePreset,
 ): Anime4KPipeline[] {
-  const clamp = new anime4k.ClampHighlights({ device, inputTexture });
-  let prev = clamp.getOutputTexture();
-
   if (preset === 'light') {
-    const upscale = new anime4k.CNNx2M({ device, inputTexture: prev });
-    prev = upscale.getOutputTexture();
-    const cas = new CASPipeline({ device, inputTexture: prev });
-    cas.updateParam('strength', 0.25);
-    return [clamp, upscale, cas];
+    return [new anime4k.ModeA({
+      device,
+      inputTexture,
+      nativeDimensions: { width: inputTexture.width, height: inputTexture.height },
+      targetDimensions: { width: inputTexture.width * 2, height: inputTexture.height * 2 },
+    })];
   }
 
   if (preset === 'balanced') {
-    const deband = new DebandPipeline({ device, inputTexture: prev });
-    prev = deband.getOutputTexture();
-    const restore = new anime4k.CNNM({ device, inputTexture: prev });
-    prev = restore.getOutputTexture();
-    const upscale = new anime4k.CNNx2M({ device, inputTexture: prev });
-    prev = upscale.getOutputTexture();
-    const cas = new CASPipeline({ device, inputTexture: prev });
-    cas.updateParam('strength', 0.3);
-    return [clamp, deband, restore, upscale, cas];
+    return [new anime4k.ModeB({
+      device,
+      inputTexture,
+      nativeDimensions: { width: inputTexture.width, height: inputTexture.height },
+      targetDimensions: { width: inputTexture.width * 2, height: inputTexture.height * 2 },
+    })];
   }
 
-  const deband = new DebandPipeline({ device, inputTexture: prev });
-  prev = deband.getOutputTexture();
-  const restore1 = new anime4k.CNNM({ device, inputTexture: prev });
-  prev = restore1.getOutputTexture();
-  const restore2 = new anime4k.CNNSoftM({ device, inputTexture: prev });
-  prev = restore2.getOutputTexture();
-  const upscale = new anime4k.CNNx2M({ device, inputTexture: prev });
-  prev = upscale.getOutputTexture();
-  const cas = new CASPipeline({ device, inputTexture: prev });
-  cas.updateParam('strength', 0.35);
-  return [clamp, deband, restore1, restore2, upscale, cas];
+  return [new anime4k.ModeC({
+    device,
+    inputTexture,
+    nativeDimensions: { width: inputTexture.width, height: inputTexture.height },
+    targetDimensions: { width: inputTexture.width * 2, height: inputTexture.height * 2 },
+  })];
 }
