@@ -36,7 +36,7 @@
 .ve-panel {
   position: absolute;
   right: 0;
-  bottom: 48px;
+  bottom: 68px;
   z-index: 999998;
   width: min(320px, calc(100vw - 28px));
   max-height: min(520px, calc(100vh - 92px));
@@ -122,8 +122,8 @@
 
 .ve-preset-btn.selected {
   color: #fff;
-  background: rgba(0, 184, 169, 0.14);
-  border-color: rgba(0, 224, 208, 0.72);
+  background: rgba(0, 116, 228, 0.14);
+  border-color: #0074E4;
 }
 
 .ve-preset-label {
@@ -147,9 +147,9 @@
   display: inline-block;
   padding: 4px 12px;
   background: rgba(0, 184, 169, 0.14);
-  border: 1px solid rgba(0, 224, 208, 0.34);
+  border: 1px solid rgba(0, 116, 228, 0.34);
   border-radius: 999px;
-  color: var(--media-brand, #00b8a9);
+  color: #1a8fff;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0;
@@ -250,7 +250,7 @@
   }
 
   .ve-panel {
-    bottom: 48px;
+    bottom: 62px;
     right: -48px;
   }
 }

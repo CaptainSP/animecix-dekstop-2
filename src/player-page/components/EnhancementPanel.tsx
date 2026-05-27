@@ -1,4 +1,4 @@
-import type { SyntheticEvent } from 'react';
+import { useEffect, useRef, type SyntheticEvent } from 'react';
 import type { UpscalePreset, ColorFilters, EnhancementStats } from '../hooks/useVideoEnhancement';
 import './EnhancementPanel.css';
 
@@ -77,8 +77,25 @@ export function EnhancementPanel({
   panelOpen,
   onPanelToggle,
 }: Props) {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!panelOpen) return;
+
+    const closeOnOutsidePointerDown = (event: PointerEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        onPanelToggle();
+      }
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsidePointerDown);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePointerDown);
+    };
+  }, [onPanelToggle, panelOpen]);
+
   return (
-    <div className="ve-menu">
+    <div className="ve-menu" ref={menuRef}>
       <button
         className={`ve-toggle-btn vds-button ${isActive ? 'active' : ''}`}
         onPointerDown={stopPlayerEvent}
