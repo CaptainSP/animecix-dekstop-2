@@ -119,6 +119,7 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
     const container = containerRef.current;
     if (!container || selectedPreset === 'off' || !navigator.gpu) return;
     if (isLinux) {
+      destroySession();
       applyFilters(container, filtersRef.current, selectedPreset, false);
       return;
     }

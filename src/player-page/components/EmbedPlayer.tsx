@@ -352,7 +352,7 @@ export function EmbedPlayer() {
         <div
           ref={enhancementContainerRef}
           className="enhancement-container"
-          style={{ display: isActive ? 'block' : 'none' }}
+          style={{ display: hasOutput ? 'block' : 'none' }}
         />
 
         <DefaultVideoLayout
