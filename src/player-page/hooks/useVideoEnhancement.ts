@@ -18,7 +18,7 @@ export interface EnhancementStats {
 const DEFAULT_FILTERS: ColorFilters = { brightness: 1, contrast: 1, saturate: 1 };
 const STORAGE_KEY = 'video-enhancement-preset';
 const FILTERS_KEY = 'video-enhancement-filters';
-const isLinux = navigator.platform.toLowerCase().includes('linux');
+const supportsWebGpuCanvas = navigator.platform.toLowerCase().startsWith('win');
 
 const QUAD_WGSL = `
 struct VO { @builtin(position) pos: vec4f };
@@ -118,7 +118,7 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
   const startRendering = useCallback(async (selectedPreset: UpscalePreset) => {
     const container = containerRef.current;
     if (!container || selectedPreset === 'off' || !navigator.gpu) return;
-    if (isLinux) {
+    if (!supportsWebGpuCanvas) {
       destroySession();
       applyFilters(container, filtersRef.current, selectedPreset, false);
       return;
@@ -336,8 +336,11 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
   }, [preset, isActive, startRendering, destroySession]);
 
   useEffect(() => {
+    if (!supportsWebGpuCanvas) {
+      destroySession();
+    }
     applyFilters(containerRef.current, filters, preset, hasOutput);
-  }, [containerRef, filters, hasOutput, preset]);
+  }, [containerRef, destroySession, filters, hasOutput, preset]);
 
   const setPreset = useCallback((newPreset: UpscalePreset) => {
     setPresetState(newPreset);
