@@ -57,7 +57,8 @@ export function startPlayerServer(): Promise<number> {
                 res.writeHead(200, {
                     'Content-Type': mimeType,
                     'Access-Control-Allow-Origin': '*',
-                    'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=31536000',
+                    'Cache-Control': 'no-store, max-age=0',
+                    Pragma: 'no-cache',
                 });
                 res.end(data);
             });

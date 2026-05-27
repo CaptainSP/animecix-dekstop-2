@@ -8,6 +8,16 @@ import type { AnimecixAPI, DownloadProgress } from './types/animecix-api';
 import { UPDATER_CHANNELS } from './types/updater.js';
 import type { UpdateReadyPayload, DownloadProgressPayload, UpdaterApi } from './types/updater.js';
 
+function appendPlayerCacheBust(pathname: string, search: string): string {
+  const pathAndSearch = `${pathname}${search}`;
+  if (!import.meta.env.DEV) {
+    return pathAndSearch;
+  }
+
+  const separator = search ? '&' : '?';
+  return `${pathAndSearch}${separator}desktopPlayerBuild=${Date.now()}`;
+}
+
 const api: AnimecixAPI = {
   // Window controls
   minimize: () => ipcRenderer.invoke('window:minimize'),
@@ -51,11 +61,12 @@ const api: AnimecixAPI = {
     try {
       const parsed = new URL(embedUrl);
       if (parsed.hostname === import.meta.env.VITE_CDN_DOMAIN && (parsed.pathname.startsWith('/embed/') || parsed.pathname.startsWith('/embed-2/'))) {
+        const playerPath = appendPlayerCacheBust(parsed.pathname, parsed.search);
         const port = (window as any).__tauPlayerPort;
         if (port) {
-          return `http://tau-player.localhost:${port}${parsed.pathname}${parsed.search}`;
+          return `http://tau-player.localhost:${port}${playerPath}`;
         }
-        return `tau-player://bundle${parsed.pathname}${parsed.search}`;
+        return `tau-player://bundle${playerPath}`;
       }
     } catch { /* invalid URL */ }
     return null;
