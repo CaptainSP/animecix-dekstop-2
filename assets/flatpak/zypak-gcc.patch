@@ -1,0 +1,62 @@
+diff --git a/Makefile b/Makefile
+index 12c9866..1ce2772 100644
+--- a/Makefile
++++ b/Makefile
+@@ -8,7 +8,8 @@ DBUS_LDLIBS := $(shell pkg-config --libs dbus-1)
+ 
+ CXX := clang++
+ CXXFLAGS := \
+-		-fstack-protector-all -fstack-clash-protection -Wall -Werror \
++		-fstack-protector-all -fstack-clash-protection -Wall -Werror \
++		-Wno-error=sign-compare -Wno-error=unused-result \
+ 		-std=c++17 -g -pthread \
+ 		-Inickle -Isrc \
+ 		$(LIBSYSTEMD_CFLAGS) $(DBUS_CFLAGS)
+diff --git a/src/base/socket.h b/src/base/socket.h
+index a9d0b12..b00d9a8 100644
+--- a/src/base/socket.h
++++ b/src/base/socket.h
+@@ -6,6 +6,7 @@
+ #pragma once
+ 
+ #include <array>
++#include <optional>
+ #include <vector>
+ 
+ #include "base/base.h"
+diff --git a/src/dbus/bus_readable_message.h b/src/dbus/bus_readable_message.h
+index 372b373..c51f715 100644
+--- a/src/dbus/bus_readable_message.h
++++ b/src/dbus/bus_readable_message.h
+@@ -4,6 +4,9 @@
+ 
+ #pragma once
+ 
++#include <optional>
++#include <utility>
++
+ #include "base/base.h"
+ #include "base/debug.h"
+ #include "dbus/bus_message.h"
+@@ -116,3 +118,8 @@ class Signal : public ReadableMessage {
+ }  // namespace zypak::dbus
+ 
+ std::ostream& operator<<(std::ostream& os, const zypak::dbus::InvocationError& error);
++
++inline zypak::debug_internal::LogStream&& operator<<(zypak::debug_internal::LogStream&& os, const zypak::dbus::InvocationError& error) {
++  static_cast<std::ostream&>(os) << error;
++  return std::move(os);
++}
+diff --git a/src/dbus/bus_writable_message.h b/src/dbus/bus_writable_message.h
+index bcd3760..013138c 100644
+--- a/src/dbus/bus_writable_message.h
++++ b/src/dbus/bus_writable_message.h
+@@ -4,6 +4,8 @@
+ 
+ #pragma once
+ 
++#include <optional>
++
+ #include "base/base.h"
+ #include "base/debug.h"
+ #include "dbus/bus_message.h"

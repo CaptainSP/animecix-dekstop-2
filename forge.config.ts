@@ -35,6 +35,23 @@ const flatpakOptions = {
   sdk: 'org.freedesktop.Sdk',
   base: 'org.electronjs.Electron2.BaseApp',
   baseVersion: '24.08',
+  modules: [
+    {
+      name: 'zypak',
+      'make-args': ['CXX=g++'],
+      sources: [
+        {
+          type: 'git',
+          url: 'https://github.com/refi64/zypak',
+          tag: 'v2021.02',
+        },
+        {
+          type: 'patch',
+          path: path.resolve('assets/flatpak/zypak-gcc.patch'),
+        },
+      ],
+    },
+  ],
   finishArgs: [
     '--share=network',
     '--share=ipc',
