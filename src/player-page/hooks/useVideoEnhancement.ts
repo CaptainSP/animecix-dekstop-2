@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Anime4KPipeline } from 'anime4k-webgpu';
+import { CASPipeline, DebandPipeline } from '../video-enhancement/custom-pipelines';
 
 export type UpscalePreset = 'off' | 'light' | 'balanced' | 'maximum';
 
@@ -18,19 +19,18 @@ export interface EnhancementStats {
 const DEFAULT_FILTERS: ColorFilters = { brightness: 1, contrast: 1, saturate: 1 };
 const STORAGE_KEY = 'video-enhancement-preset';
 const FILTERS_KEY = 'video-enhancement-filters';
-const supportsWebGpuCanvas = navigator.platform.toLowerCase().startsWith('win');
 
 const QUAD_WGSL = `
-struct VO { @builtin(position) pos: vec4f };
+struct VO { @builtin(position) pos: vec4f, @location(0) uv: vec2f };
 @vertex fn vs(@builtin(vertex_index) i: u32) -> VO {
   var p = array<vec2f,6>(vec2f(-1,-1),vec2f(1,-1),vec2f(-1,1),vec2f(-1,1),vec2f(1,-1),vec2f(1,1));
-  var o: VO; o.pos = vec4f(p[i],0,1); return o;
+  var u = array<vec2f,6>(vec2f(0,1),vec2f(1,1),vec2f(0,0),vec2f(0,0),vec2f(1,1),vec2f(1,0));
+  var o: VO; o.pos = vec4f(p[i],0,1); o.uv = u[i]; return o;
 }
-@group(0) @binding(0) var t: texture_2d<f32>;
-@fragment fn fs(@builtin(position) pos: vec4f) -> @location(0) vec4f {
-  let dim = textureDimensions(t);
-  let xy = clamp(vec2i(pos.xy), vec2i(0), vec2i(dim) - vec2i(1));
-  return clamp(textureLoad(t, xy, 0), vec4f(0), vec4f(1));
+@group(0) @binding(0) var s: sampler;
+@group(0) @binding(1) var t: texture_2d<f32>;
+@fragment fn fs(@location(0) uv: vec2f) -> @location(0) vec4f {
+  return textureSample(t, s, uv);
 }`;
 
 interface Session {
@@ -41,7 +41,6 @@ interface Session {
 }
 
 function loadPreset(): UpscalePreset {
-  if (!supportsWebGpuCanvas) return 'off';
   return (localStorage.getItem(STORAGE_KEY) as UpscalePreset) || 'off';
 }
 
@@ -61,27 +60,11 @@ function getFilterStyle(filters: ColorFilters): string {
   return parts.join(' ');
 }
 
-function getPresetFallbackStyle(preset: UpscalePreset): string {
-  if (preset === 'light') return 'contrast(1.04) saturate(1.04)';
-  if (preset === 'balanced') return 'contrast(1.07) saturate(1.08)';
-  if (preset === 'maximum') return 'contrast(1.1) saturate(1.12)';
-  return '';
-}
-
-function joinFilters(...styles: string[]): string {
-  return styles.filter(Boolean).join(' ');
-}
-
-function applyFilters(
-  container: HTMLElement | null,
-  filters: ColorFilters,
-  preset: UpscalePreset,
-  hasOutput: boolean,
-): void {
+function applyFilters(container: HTMLElement | null, filters: ColorFilters): void {
   const filterStyle = getFilterStyle(filters);
   const video = document.querySelector('video') as HTMLVideoElement | null;
   if (video) {
-    video.style.filter = joinFilters(filterStyle, hasOutput ? '' : getPresetFallbackStyle(preset));
+    video.style.filter = filterStyle;
   }
 
   const canvas = container?.querySelector('canvas');
@@ -99,7 +82,6 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
   const sessionRef = useRef<Session | null>(null);
   const presetRef = useRef<UpscalePreset>(loadPreset());
   const filtersRef = useRef<ColorFilters>(loadFilters());
-  const hasOutputRef = useRef(false);
 
   const isActive = preset !== 'off';
 
@@ -112,23 +94,17 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
     const container = containerRef.current;
     if (container) container.innerHTML = '';
     setStats({ fps: 0, outputLabel: '', performance: null });
-    hasOutputRef.current = false;
     setHasOutput(false);
   }, [containerRef]);
 
   const startRendering = useCallback(async (selectedPreset: UpscalePreset) => {
     const container = containerRef.current;
-    if (!supportsWebGpuCanvas) {
-      destroySession();
-      return;
-    }
     if (!container || selectedPreset === 'off' || !navigator.gpu) return;
 
     const video = document.querySelector('video') as HTMLVideoElement | null;
     if (!video || video.readyState < 2) return;
 
     destroySession();
-    hasOutputRef.current = false;
     setHasOutput(false);
 
     const nativeW = video.videoWidth;
@@ -144,7 +120,7 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
     canvas.width = canvasW;
     canvas.height = canvasH;
     container.appendChild(canvas);
-    applyFilters(container, filtersRef.current, selectedPreset, hasOutputRef.current);
+    applyFilters(container, filtersRef.current);
 
     try {
       const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
@@ -167,22 +143,19 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
       const anime4k = await import('anime4k-webgpu');
       const pipelines = buildPipelines(anime4k, device, inputTexture, selectedPreset);
 
-      const renderBindGroupLayout = device.createBindGroupLayout({
-        entries: [
-          { binding: 0, visibility: GPUShaderStage.FRAGMENT, texture: { sampleType: 'unfilterable-float' } },
-        ],
-      });
       const module = device.createShaderModule({ code: QUAD_WGSL });
       const renderPipeline = device.createRenderPipeline({
-        layout: device.createPipelineLayout({ bindGroupLayouts: [renderBindGroupLayout] }),
+        layout: 'auto',
         vertex: { module, entryPoint: 'vs' },
         fragment: { module, entryPoint: 'fs', targets: [{ format }] },
       });
+      const sampler = device.createSampler({ magFilter: 'linear', minFilter: 'linear' });
       const lastOutput = pipelines[pipelines.length - 1].getOutputTexture();
       const bindGroup = device.createBindGroup({
-        layout: renderBindGroupLayout,
+        layout: renderPipeline.getBindGroupLayout(0),
         entries: [
-          { binding: 0, resource: lastOutput.createView() },
+          { binding: 0, resource: sampler },
+          { binding: 1, resource: lastOutput.createView() },
         ],
       });
 
@@ -233,8 +206,6 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
 
           if (!outputStarted) {
             outputStarted = true;
-            hasOutputRef.current = true;
-            applyFilters(container, filtersRef.current, presetRef.current, true);
             setHasOutput(true);
           }
 
@@ -336,52 +307,28 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
   }, [preset, isActive, startRendering, destroySession]);
 
   useEffect(() => {
-    if (!supportsWebGpuCanvas) {
-      destroySession();
-      localStorage.setItem(STORAGE_KEY, 'off');
-      setPresetState('off');
-      presetRef.current = 'off';
-      applyFilters(containerRef.current, filters, 'off', false);
-      return;
-    }
-    applyFilters(containerRef.current, filters, preset, hasOutput);
-  }, [containerRef, destroySession, filters, hasOutput, preset]);
+    applyFilters(containerRef.current, filters);
+  }, [containerRef, filters]);
 
   const setPreset = useCallback((newPreset: UpscalePreset) => {
-    if (!supportsWebGpuCanvas) {
-      destroySession();
-      setPresetState('off');
-      presetRef.current = 'off';
-      localStorage.setItem(STORAGE_KEY, 'off');
-      applyFilters(containerRef.current, filtersRef.current, 'off', false);
-      return;
-    }
-
     setPresetState(newPreset);
     presetRef.current = newPreset;
-    hasOutputRef.current = false;
-    setHasOutput(false);
     localStorage.setItem(STORAGE_KEY, newPreset);
-    applyFilters(containerRef.current, filtersRef.current, newPreset, false);
-  }, [containerRef]);
+  }, []);
 
   const setFilters = useCallback((newFilters: Partial<ColorFilters>) => {
     setFiltersState(prev => {
       const updated = { ...prev, ...newFilters };
       filtersRef.current = updated;
       localStorage.setItem(FILTERS_KEY, JSON.stringify(updated));
-      applyFilters(containerRef.current, updated, presetRef.current, hasOutputRef.current);
+      applyFilters(containerRef.current, updated);
       return updated;
     });
   }, [containerRef]);
 
   return {
     preset, setPreset, filters, setFilters,
-    isActive: supportsWebGpuCanvas && isActive,
-    hasOutput: supportsWebGpuCanvas && hasOutput,
-    stats,
-    panelOpen,
-    setPanelOpen,
+    isActive, hasOutput, stats, panelOpen, setPanelOpen,
   };
 }
 
@@ -391,28 +338,38 @@ function buildPipelines(
   inputTexture: GPUTexture,
   preset: UpscalePreset,
 ): Anime4KPipeline[] {
+  const clamp = new anime4k.ClampHighlights({ device, inputTexture });
+  let prev = clamp.getOutputTexture();
+
   if (preset === 'light') {
-    return [new anime4k.ModeA({
-      device,
-      inputTexture,
-      nativeDimensions: { width: inputTexture.width, height: inputTexture.height },
-      targetDimensions: { width: inputTexture.width * 2, height: inputTexture.height * 2 },
-    })];
+    const upscale = new anime4k.CNNx2M({ device, inputTexture: prev });
+    prev = upscale.getOutputTexture();
+    const cas = new CASPipeline({ device, inputTexture: prev });
+    cas.updateParam('strength', 0.25);
+    return [clamp, upscale, cas];
   }
 
   if (preset === 'balanced') {
-    return [new anime4k.ModeB({
-      device,
-      inputTexture,
-      nativeDimensions: { width: inputTexture.width, height: inputTexture.height },
-      targetDimensions: { width: inputTexture.width * 2, height: inputTexture.height * 2 },
-    })];
+    const deband = new DebandPipeline({ device, inputTexture: prev });
+    prev = deband.getOutputTexture();
+    const restore = new anime4k.CNNM({ device, inputTexture: prev });
+    prev = restore.getOutputTexture();
+    const upscale = new anime4k.CNNx2M({ device, inputTexture: prev });
+    prev = upscale.getOutputTexture();
+    const cas = new CASPipeline({ device, inputTexture: prev });
+    cas.updateParam('strength', 0.3);
+    return [clamp, deband, restore, upscale, cas];
   }
 
-  return [new anime4k.ModeC({
-    device,
-    inputTexture,
-    nativeDimensions: { width: inputTexture.width, height: inputTexture.height },
-    targetDimensions: { width: inputTexture.width * 2, height: inputTexture.height * 2 },
-  })];
+  const deband = new DebandPipeline({ device, inputTexture: prev });
+  prev = deband.getOutputTexture();
+  const restore1 = new anime4k.CNNM({ device, inputTexture: prev });
+  prev = restore1.getOutputTexture();
+  const restore2 = new anime4k.CNNSoftM({ device, inputTexture: prev });
+  prev = restore2.getOutputTexture();
+  const upscale = new anime4k.CNNx2M({ device, inputTexture: prev });
+  prev = upscale.getOutputTexture();
+  const cas = new CASPipeline({ device, inputTexture: prev });
+  cas.updateParam('strength', 0.35);
+  return [clamp, deband, restore1, restore2, upscale, cas];
 }
