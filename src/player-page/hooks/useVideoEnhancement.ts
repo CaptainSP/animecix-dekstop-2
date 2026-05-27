@@ -60,11 +60,27 @@ function getFilterStyle(filters: ColorFilters): string {
   return parts.join(' ');
 }
 
-function applyFilters(container: HTMLElement | null, filters: ColorFilters): void {
+function getPresetFallbackStyle(preset: UpscalePreset): string {
+  if (preset === 'light') return 'contrast(1.04) saturate(1.04)';
+  if (preset === 'balanced') return 'contrast(1.07) saturate(1.08)';
+  if (preset === 'maximum') return 'contrast(1.1) saturate(1.12)';
+  return '';
+}
+
+function joinFilters(...styles: string[]): string {
+  return styles.filter(Boolean).join(' ');
+}
+
+function applyFilters(
+  container: HTMLElement | null,
+  filters: ColorFilters,
+  preset: UpscalePreset,
+  hasOutput: boolean,
+): void {
   const filterStyle = getFilterStyle(filters);
   const video = document.querySelector('video') as HTMLVideoElement | null;
   if (video) {
-    video.style.filter = filterStyle;
+    video.style.filter = joinFilters(filterStyle, hasOutput ? '' : getPresetFallbackStyle(preset));
   }
 
   const canvas = container?.querySelector('canvas');
@@ -82,6 +98,7 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
   const sessionRef = useRef<Session | null>(null);
   const presetRef = useRef<UpscalePreset>(loadPreset());
   const filtersRef = useRef<ColorFilters>(loadFilters());
+  const hasOutputRef = useRef(false);
 
   const isActive = preset !== 'off';
 
@@ -94,6 +111,7 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
     const container = containerRef.current;
     if (container) container.innerHTML = '';
     setStats({ fps: 0, outputLabel: '', performance: null });
+    hasOutputRef.current = false;
     setHasOutput(false);
   }, [containerRef]);
 
@@ -105,6 +123,7 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
     if (!video || video.readyState < 2) return;
 
     destroySession();
+    hasOutputRef.current = false;
     setHasOutput(false);
 
     const nativeW = video.videoWidth;
@@ -120,7 +139,7 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
     canvas.width = canvasW;
     canvas.height = canvasH;
     container.appendChild(canvas);
-    applyFilters(container, filtersRef.current);
+    applyFilters(container, filtersRef.current, selectedPreset, hasOutputRef.current);
 
     try {
       const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
@@ -206,6 +225,8 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
 
           if (!outputStarted) {
             outputStarted = true;
+            hasOutputRef.current = true;
+            applyFilters(container, filtersRef.current, presetRef.current, true);
             setHasOutput(true);
           }
 
@@ -307,21 +328,24 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
   }, [preset, isActive, startRendering, destroySession]);
 
   useEffect(() => {
-    applyFilters(containerRef.current, filters);
-  }, [containerRef, filters]);
+    applyFilters(containerRef.current, filters, preset, hasOutput);
+  }, [containerRef, filters, hasOutput, preset]);
 
   const setPreset = useCallback((newPreset: UpscalePreset) => {
     setPresetState(newPreset);
     presetRef.current = newPreset;
+    hasOutputRef.current = false;
+    setHasOutput(false);
     localStorage.setItem(STORAGE_KEY, newPreset);
-  }, []);
+    applyFilters(containerRef.current, filtersRef.current, newPreset, false);
+  }, [containerRef]);
 
   const setFilters = useCallback((newFilters: Partial<ColorFilters>) => {
     setFiltersState(prev => {
       const updated = { ...prev, ...newFilters };
       filtersRef.current = updated;
       localStorage.setItem(FILTERS_KEY, JSON.stringify(updated));
-      applyFilters(containerRef.current, updated);
+      applyFilters(containerRef.current, updated, presetRef.current, hasOutputRef.current);
       return updated;
     });
   }, [containerRef]);
