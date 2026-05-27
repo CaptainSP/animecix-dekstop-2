@@ -40,7 +40,9 @@ import { registerLibraryIpc } from './library/library.ipc';
 // Enable WebGPU for video enhancement (Anime4K upscaling + filters)
 app.commandLine.appendSwitch('enable-unsafe-webgpu');
 app.commandLine.appendSwitch('enable-features', 'Vulkan,WebGPU');
-app.commandLine.appendSwitch('use-angle', 'metal');
+if (process.platform === 'darwin') {
+  app.commandLine.appendSwitch('use-angle', 'metal');
+}
 app.commandLine.appendSwitch('ignore-gpu-blocklist');
 
 // Handle Squirrel.Windows install/uninstall shortcuts

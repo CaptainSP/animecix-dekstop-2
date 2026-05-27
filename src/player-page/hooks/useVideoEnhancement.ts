@@ -162,16 +162,22 @@ export function useVideoEnhancement(containerRef: React.RefObject<HTMLElement | 
       const anime4k = await import('anime4k-webgpu');
       const pipelines = buildPipelines(anime4k, device, inputTexture, selectedPreset);
 
+      const renderBindGroupLayout = device.createBindGroupLayout({
+        entries: [
+          { binding: 0, visibility: GPUShaderStage.FRAGMENT, sampler: { type: 'non-filtering' } },
+          { binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: { sampleType: 'unfilterable-float' } },
+        ],
+      });
       const module = device.createShaderModule({ code: QUAD_WGSL });
       const renderPipeline = device.createRenderPipeline({
-        layout: 'auto',
+        layout: device.createPipelineLayout({ bindGroupLayouts: [renderBindGroupLayout] }),
         vertex: { module, entryPoint: 'vs' },
         fragment: { module, entryPoint: 'fs', targets: [{ format }] },
       });
-      const sampler = device.createSampler({ magFilter: 'linear', minFilter: 'linear' });
+      const sampler = device.createSampler();
       const lastOutput = pipelines[pipelines.length - 1].getOutputTexture();
       const bindGroup = device.createBindGroup({
-        layout: renderPipeline.getBindGroupLayout(0),
+        layout: renderBindGroupLayout,
         entries: [
           { binding: 0, resource: sampler },
           { binding: 1, resource: lastOutput.createView() },
