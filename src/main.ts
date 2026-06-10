@@ -42,8 +42,9 @@ app.commandLine.appendSwitch('ignore-gpu-blocklist');
 
 // Windows and macOS initialize WebGPU by default since Chromium 113 (No flags needed)
 
-// Linux WebGPU is still experimental and needs specific initialization
-if (process.platform === 'linux') {
+// Wayland WebGPU is still experimental and needs specific initialization
+// Check display server first to exclude X11
+if (process.platform === 'linux' && process.env.WAYLAND_DISPLAY) {
   // Force-enable graphics backends necessary for WebGPU on Linux
   app.commandLine.appendSwitch('enable-features', 'Vulkan,VulkanFromANGLE,WebGPU');
   // Unsafe flag still required on Linux — not stable/default yet
