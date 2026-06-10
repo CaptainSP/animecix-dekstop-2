@@ -27,7 +27,7 @@ export function NavigationButtons({ hasNext, hasPrev }: NavigationButtonsProps) 
       {hasNext && (
         <button
           className="nav-btn nav-btn-next"
-          aria-label="Sonraki bolum"
+          aria-label="Sonraki bölüm"
           onClick={() => postToParent('next')}
         >
           <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
