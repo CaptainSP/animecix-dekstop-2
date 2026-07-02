@@ -15,7 +15,7 @@
   "parser": "@typescript-eslint/parser",
   "rules": {
     "import/no-unresolved": ["error", {
-      "ignore": ["vitest/config", "@vidstack/react", "@vidstack/react/*", ".*\\.js$"]
+      "ignore": ["vitest/config", "^vite$", "^vite/", "@vidstack/react", "@vidstack/react/*", ".*\\.js$"]
     }],
     "@typescript-eslint/no-var-requires": "warn",
     "@typescript-eslint/no-empty-function": "warn",

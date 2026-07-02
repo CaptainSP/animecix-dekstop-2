@@ -63,8 +63,11 @@ export function LibraryApp() {
 
   return (
     <div style={{
-      background: 'var(--bg-primary)', minHeight: '100vh',
-      display: 'flex', flexDirection: 'column',
+      background: 'var(--bg-primary)',
+      height: '100vh',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
     }}>
       {!isOnline && <div className="drag-region" style={{
         position: 'fixed', top: 0, left: 0, right: 0, height: 48 + titlebarOffset, zIndex: 999,
@@ -78,9 +81,15 @@ export function LibraryApp() {
         <SearchBar value={searchQuery} onChange={setSearchQuery} />
       </div>
 
-      <div style={{
-        flex: 1, overflowY: 'auto', padding: '0 32px 32px',
-      }}>
+      <div
+        className="library-scroll"
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          padding: '0 32px 32px',
+        }}
+      >
         {filteredAnimes.length === 0 ? (
           <EmptyState hasSearch={searchQuery.length > 0} />
         ) : (

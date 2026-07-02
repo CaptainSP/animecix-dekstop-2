@@ -1,3 +1,4 @@
+
 :root {
   --bg-primary: #111111;
   --bg-secondary: #1a1a1a;
@@ -12,6 +13,8 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
 
 html { overflow: hidden; }
 
@@ -28,7 +31,18 @@ body {
 }
 
 #root {
-  min-height: 100vh;
+  height: 100%;
+}
+
+/* Hide scrollbar but keep scroll enabled */
+.library-scroll {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Old Edge */
+}
+
+.library-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .drag-region {
