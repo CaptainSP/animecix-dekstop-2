@@ -106,10 +106,8 @@ export function createWindow(storage: StorageService): BrowserWindow {
   });
 
   // Dev: load local Angular dev server; Production: load website
-  const startUrl = app.isPackaged
-    ? import.meta.env.VITE_SITE_URL
-    : 'http://localhost:4200';
-  void win.loadURL(startUrl);
+const startUrl = import.meta.env.VITE_SITE_URL;
+void win.loadURL(startUrl);
 
   // Persist bounds on resize/move — debounced, skip while maximized
   const saveBounds = debounce(() => {

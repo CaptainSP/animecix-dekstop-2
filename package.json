@@ -19,6 +19,7 @@
     ]
   },
   "scripts": {
+    "prestart": "npm run build:player && npm run build:library",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
