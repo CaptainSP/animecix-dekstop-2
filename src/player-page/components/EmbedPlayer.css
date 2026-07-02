@@ -1,5 +1,8 @@
 .encoding {
-  background-color: black;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(0, 184, 169, 0.16), transparent 32%),
+    radial-gradient(circle at 82% 78%, rgba(255, 91, 91, 0.14), transparent 34%),
+    #050505;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -7,6 +10,25 @@
   height: 100%;
   position: absolute;
   color: white;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.encoding > div {
+  max-width: min(520px, calc(100vw - 48px));
+  padding: 24px;
+  text-align: center;
+}
+
+.encoding h1 {
+  margin: 0 0 8px;
+  font-size: clamp(24px, 4vw, 42px);
+  font-weight: 750;
+}
+
+.encoding p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.5;
 }
 
 .loading {
@@ -16,6 +38,29 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.08), transparent 28%),
+    #050505;
+}
+
+.vds-video-layout {
+  --video-brand: #00b8a9;
+  --media-brand: #00b8a9;
+  --media-focus-ring-color: rgba(0, 184, 169, 0.65);
+  --media-slider-track-fill-bg: linear-gradient(90deg, #00b8a9, #ff5b5b);
+  --media-menu-bg: rgba(10, 10, 10, 0.92);
+  --media-menu-border: 1px solid rgba(255, 255, 255, 0.12);
+  --media-tooltip-bg: rgba(10, 10, 10, 0.92);
+  --media-tooltip-color: #fff;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.vds-controls-group {
+  padding-inline: clamp(12px, 2vw, 24px);
+}
+
+.vds-controls {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.88), transparent 78%) !important;
 }
 
 .vds-audio-menu {
@@ -39,21 +84,35 @@
 /* Skip button */
 .skip {
   position: absolute;
-  bottom: 80px;
-  right: 20px;
+  bottom: clamp(84px, 12vh, 118px);
+  right: clamp(16px, 3vw, 32px);
   z-index: 999999;
-  background-color: rgba(0, 0, 0, 0.7);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 128px;
+  min-height: 42px;
+  background: linear-gradient(135deg, rgba(0, 184, 169, 0.92), rgba(255, 91, 91, 0.9));
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 4px;
-  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 10px 18px;
   font-size: 14px;
+  font-weight: 700;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   cursor: pointer;
-  transition: background-color 0.2s;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.38);
+  transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
 }
 
 .skip:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.45);
+}
+
+.skip:active {
+  transform: translateY(0);
 }
 
 /* Navigation buttons (prev/next episode) - only visible when controls are shown */
@@ -66,15 +125,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(10, 10, 10, 0.58);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   color: white;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 50%;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   cursor: pointer;
-  transition: background-color 0.2s, opacity 0.3s;
+  transition: background-color 0.2s, opacity 0.3s, transform 0.2s;
   opacity: 0;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.38);
 }
 
 [data-controls] .nav-btn {
@@ -82,8 +144,9 @@
 }
 
 [data-controls] .nav-btn:hover {
-  background-color: rgba(255, 255, 255, 0.25);
+  background-color: rgba(255, 255, 255, 0.18);
   opacity: 1;
+  transform: translateY(-50%) scale(1.04);
 }
 
 .nav-btn-prev {
@@ -96,8 +159,8 @@
 
 @media (min-width: 768px) {
   .nav-btn {
-    width: 56px;
-    height: 56px;
+    width: 60px;
+    height: 60px;
   }
 
   .nav-btn svg {
@@ -149,9 +212,11 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px 10px 84px;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+  min-height: 64px;
+  padding: 12px 18px 20px max(18px, env(safe-area-inset-left));
+  background: linear-gradient(to bottom, rgba(0,0,0,0.82), rgba(0,0,0,0.28), transparent);
   pointer-events: none;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .offline-header > * {
@@ -162,25 +227,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(10, 10, 10, 0.62);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   color: white;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.2s;
   flex-shrink: 0;
 }
 
 .offline-back-btn:hover {
-  background-color: rgba(255, 255, 255, 0.25);
+  background-color: rgba(255, 255, 255, 0.18);
+  transform: translateX(-1px);
 }
 
 .offline-episode-info {
   color: white;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 650;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -200,24 +268,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(10, 10, 10, 0.62);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   color: white;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.2s;
 }
 
 .offline-nav-btn:hover {
-  background-color: rgba(255, 255, 255, 0.25);
+  background-color: rgba(255, 255, 255, 0.18);
+  transform: scale(1.04);
 }
 
 /* Loading spinner */
 .loadingio-spinner-rolling {
-  width: 60px;
-  height: 60px;
+  width: 68px;
+  height: 68px;
 }
 
 .ldio-spinner {
@@ -230,13 +301,13 @@
   box-sizing: border-box;
   display: block;
   position: absolute;
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
   margin: 6px;
-  border: 6px solid #fff;
+  border: 5px solid #fff;
   border-radius: 50%;
   animation: ldio-spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-  border-color: #fff transparent transparent transparent;
+  border-color: #00b8a9 transparent #ff5b5b transparent;
 }
 
 @keyframes ldio-spin {
@@ -265,19 +336,20 @@
   position: absolute;
   top: 16px;
   left: 16px;
-  background: #e53935;
+  background: rgba(229, 57, 53, 0.92);
   color: #fff;
-  padding: 4px 12px;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border-radius: 999px;
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0;
   display: flex;
   align-items: center;
   gap: 6px;
   z-index: 100;
   pointer-events: none;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  box-shadow: 0 8px 24px rgba(229, 57, 53, 0.28);
 }
 
 .live-dot {
@@ -298,12 +370,36 @@
   position: absolute;
   top: 16px;
   right: 16px;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(10, 10, 10, 0.62);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   color: #fff;
-  padding: 4px 10px;
-  border-radius: 4px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
   font-size: 12px;
   z-index: 100;
   pointer-events: none;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+@media (max-width: 640px) {
+  .skip {
+    min-width: 112px;
+    min-height: 38px;
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .nav-btn-prev {
+    left: 14px;
+  }
+
+  .nav-btn-next {
+    right: 14px;
+  }
+
+  .offline-header {
+    padding-right: 12px;
+  }
 }

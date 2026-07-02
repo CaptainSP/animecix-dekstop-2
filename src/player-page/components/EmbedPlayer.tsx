@@ -60,7 +60,7 @@ export function EmbedPlayer() {
   const enhancementContainerRef = useRef<HTMLDivElement>(null);
   const {
     preset, setPreset, filters, setFilters,
-    isActive, stats, panelOpen, setPanelOpen,
+    isActive, hasOutput, stats, panelOpen, setPanelOpen,
   } = useVideoEnhancement(enhancementContainerRef);
 
   // changeVideo: reset time to 0 first, then fetch new video
@@ -273,6 +273,7 @@ export function EmbedPlayer() {
         <div className="offline-header">
           <button
             className="offline-back-btn"
+            aria-label="Kutuphaneye don"
             onClick={() => (window as any).animecix?.showLibrary?.()}
           >
             <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
@@ -291,6 +292,7 @@ export function EmbedPlayer() {
               {offlineNav.prevEpisodeId && (
                 <button
                   className="offline-nav-btn"
+                  aria-label="Onceki bolum"
                   onClick={() => (window as any).animecix?.playOfflineEpisode?.(offlineNav.prevEpisodeId)}
                 >
                   <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
@@ -301,6 +303,7 @@ export function EmbedPlayer() {
               {offlineNav.nextEpisodeId && (
                 <button
                   className="offline-nav-btn"
+                  aria-label="Sonraki bolum"
                   onClick={() => (window as any).animecix?.playOfflineEpisode?.(offlineNav.nextEpisodeId)}
                 >
                   <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
@@ -330,7 +333,7 @@ export function EmbedPlayer() {
           postToParent(isFullscreen ? 'enterFullscreen' : 'exitFullscreen');
         }}
         style={{ height: '100vh' }}
-        className={`${isActive ? 'enhancement-active' : ''} ${liveState.enabled ? 'live-mode' : ''}`}
+        className={`${hasOutput ? 'enhancement-active' : ''} ${liveState.enabled ? 'live-mode' : ''}`}
       >
         <MediaProvider>
           {tracks.map((track, i) => (
@@ -356,7 +359,21 @@ export function EmbedPlayer() {
           icons={defaultLayoutIcons}
           translations={turkishTranslations}
           thumbnails={isOffline ? undefined : import.meta.env.VITE_API_BASE_URL + '/preview/' + id}
-          playbackRates={[0.5, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4]}
+          playbackRates={[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4]}
+          slots={{
+            afterSettingsMenu: (
+              <EnhancementPanel
+                preset={preset}
+                onPresetChange={setPreset}
+                filters={filters}
+                onFiltersChange={setFilters}
+                stats={stats}
+                isActive={isActive}
+                panelOpen={panelOpen}
+                onPanelToggle={() => setPanelOpen(!panelOpen)}
+              />
+            ),
+          }}
         />
         <SkipButton meta={meta} />
         <MusicInfo meta={meta} />
@@ -366,17 +383,6 @@ export function EmbedPlayer() {
             hasPrev={navInfo.hasPrev}
           />
         )}
-        {/* TODO: supported && koşulunu geri ekle */}
-        <EnhancementPanel
-            preset={preset}
-            onPresetChange={setPreset}
-            filters={filters}
-            onFiltersChange={setFilters}
-            stats={stats}
-            isActive={isActive}
-            panelOpen={panelOpen}
-            onPanelToggle={() => setPanelOpen(!panelOpen)}
-          />
       </MediaPlayer>
 
       <canvas

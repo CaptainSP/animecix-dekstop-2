@@ -1,3 +1,4 @@
+import { useEffect, useRef, type SyntheticEvent } from 'react';
 import type { UpscalePreset, ColorFilters, EnhancementStats } from '../hooks/useVideoEnhancement';
 import './EnhancementPanel.css';
 
@@ -24,6 +25,10 @@ const PERF_LABELS: Record<string, { text: string; className: string }> = {
   good: { text: 'Cihazınız bu modu kaldırıyor', className: 've-perf-good' },
   poor: { text: 'Cihazınız bu mod için yeterli olmayabilir', className: 've-perf-poor' },
 };
+
+function stopPlayerEvent(event: SyntheticEvent): void {
+  event.stopPropagation();
+}
 
 function Slider({
   label,
@@ -52,7 +57,11 @@ function Slider({
         max={max}
         step={step}
         value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
+        onPointerDown={stopPlayerEvent}
+        onMouseDown={stopPlayerEvent}
+        onTouchStart={stopPlayerEvent}
+        onInput={(e) => onChange(parseFloat(e.currentTarget.value))}
+        onChange={(e) => onChange(parseFloat(e.currentTarget.value))}
       />
     </div>
   );
@@ -68,23 +77,60 @@ export function EnhancementPanel({
   panelOpen,
   onPanelToggle,
 }: Props) {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!panelOpen) return;
+
+    const closeOnOutsidePointerDown = (event: PointerEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        onPanelToggle();
+      }
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsidePointerDown);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePointerDown);
+    };
+  }, [onPanelToggle, panelOpen]);
+
   return (
-    <>
+    <div className="ve-menu" ref={menuRef}>
       <button
-        className={`ve-toggle-btn ${isActive ? 'active' : ''}`}
-        onClick={onPanelToggle}
+        className={`ve-toggle-btn vds-button ${isActive ? 'active' : ''}`}
+        onPointerDown={stopPlayerEvent}
+        onClick={(e) => {
+          stopPlayerEvent(e);
+          onPanelToggle();
+        }}
         title="Video Kalite Artırma"
+        aria-label="Video kalite ayarlarini ac"
       >
-        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+        <svg className="vds-icon" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
           <path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z" />
         </svg>
       </button>
 
       {panelOpen && (
-        <div className="ve-panel" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="ve-panel"
+          role="menu"
+          onPointerDown={stopPlayerEvent}
+          onMouseDown={stopPlayerEvent}
+          onTouchStart={stopPlayerEvent}
+          onClick={stopPlayerEvent}
+          onDoubleClick={stopPlayerEvent}
+        >
           <div className="ve-panel-header">
             <span>Video Kalitesi</span>
-            <button className="ve-close-btn" onClick={onPanelToggle}>
+            <button
+              className="ve-close-btn"
+              aria-label="Paneli kapat"
+              onClick={(e) => {
+                stopPlayerEvent(e);
+                onPanelToggle();
+              }}
+            >
               <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
                 <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
               </svg>
@@ -97,7 +143,10 @@ export function EnhancementPanel({
                 <button
                   key={p.value}
                   className={`ve-preset-btn ${preset === p.value ? 'selected' : ''}`}
-                  onClick={() => onPresetChange(p.value)}
+                  onClick={(e) => {
+                    stopPlayerEvent(e);
+                    onPresetChange(p.value);
+                  }}
                 >
                   <span className="ve-preset-label">{p.label}</span>
                   <span className="ve-preset-desc">{p.desc}</span>
@@ -147,13 +196,16 @@ export function EnhancementPanel({
             />
             <button
               className="ve-reset-btn"
-              onClick={() => onFiltersChange({ brightness: 1, contrast: 1, saturate: 1 })}
+              onClick={(e) => {
+                stopPlayerEvent(e);
+                onFiltersChange({ brightness: 1, contrast: 1, saturate: 1 });
+              }}
             >
               Sıfırla
             </button>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

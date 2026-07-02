@@ -2,20 +2,23 @@
   position: absolute;
   bottom: 0;
   left: 0;
-  margin-left: 2%;
-  margin-bottom: 8%;
+  margin-left: clamp(14px, 2vw, 28px);
+  margin-bottom: clamp(88px, 12vh, 124px);
   pointer-events: auto;
   z-index: 999998;
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 10px;
-  padding: 8px 12px;
+  max-width: min(360px, calc(100vw - 28px));
+  background: rgba(10, 10, 10, 0.68);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 8px;
+  padding: 10px 12px;
   animation: musicSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 @keyframes musicSlideIn {
@@ -36,8 +39,8 @@
 }
 
 .music-info-cover {
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   border-radius: 6px;
   object-fit: cover;
   flex-shrink: 0;
@@ -53,21 +56,21 @@
 
 .music-info-title {
   color: #fff;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 160px;
+  max-width: 190px;
 }
 
 .music-info-artist {
   color: rgba(255, 255, 255, 0.6);
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 160px;
+  max-width: 190px;
 }
 
 .music-info-bars {
@@ -80,7 +83,7 @@
 
 .bar {
   width: 3px;
-  background: #1db954;
+  background: linear-gradient(to top, #00b8a9, #ff5b5b);
   border-radius: 1.5px;
   animation: barBounce 1s ease-in-out infinite;
 }
@@ -116,7 +119,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #1db954;
+  background: #00b8a9;
   color: #fff;
   text-decoration: none;
   flex-shrink: 0;
@@ -125,12 +128,12 @@
 
 .music-info-link:hover {
   transform: scale(1.15);
-  background: #1ed760;
+  background: #00e0d0;
 }
 
 @media (max-width: 600px) {
   .music-info {
-    margin-bottom: 16%;
+    margin-bottom: 82px;
     padding: 6px 10px;
   }
 

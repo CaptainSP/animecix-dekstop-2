@@ -29,6 +29,7 @@ export function SkipButton({ meta }: SkipButtonProps) {
   return (
     <button
       className="skip"
+      aria-label="Bu kismi atla"
       onClick={() => {
         player.currentTime = skipTo;
         player.play().catch(() => {});
