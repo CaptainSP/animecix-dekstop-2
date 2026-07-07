@@ -30,7 +30,7 @@
 }
 
 .ve-toggle-btn.active {
-  color: var(--media-brand, #00b8a9);
+  color: var(--media-brand, #0074e4);
 }
 
 .ve-panel {
@@ -146,7 +146,7 @@
 .ve-output-badge {
   display: inline-block;
   padding: 4px 12px;
-  background: rgba(0, 184, 169, 0.14);
+  background: rgba(0, 116, 228, 0.14);
   border: 1px solid rgba(0, 116, 228, 0.34);
   border-radius: 999px;
   color: #1a8fff;
@@ -239,7 +239,7 @@
 }
 
 .ve-reset-btn:hover {
-  color: #00e0d0;
+  color: #1a8fff;
   background: transparent;
 }
 

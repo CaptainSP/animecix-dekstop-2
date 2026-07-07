@@ -83,7 +83,7 @@
 
 .bar {
   width: 3px;
-  background: linear-gradient(to top, #00b8a9, #ff5b5b);
+  background: #1db954;
   border-radius: 1.5px;
   animation: barBounce 1s ease-in-out infinite;
 }
@@ -119,7 +119,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #00b8a9;
+  background: #1db954;
   color: #fff;
   text-decoration: none;
   flex-shrink: 0;
@@ -128,7 +128,7 @@
 
 .music-info-link:hover {
   transform: scale(1.15);
-  background: #00e0d0;
+  background: #1ed760;
 }
 
 @media (max-width: 600px) {
