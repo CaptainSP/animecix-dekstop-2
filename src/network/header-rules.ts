@@ -27,6 +27,28 @@ export const HEADER_RULES: HeaderRule[] = [
 ];
 
 /**
+ * URL filter for the ACAO override in header-rewriter. The override must ONLY
+ * touch the video CDN (whose cross-origin media the player reads from the
+ * tau-player.localhost origin) and NEVER challenges.cloudflare.com, whose
+ * credentialed CORS responses break if their ACAO is forced to '*'.
+ * Whole-domain scope so m3u8 playlists and segments are all covered.
+ */
+export const CDN_ACAO_URL_PATTERNS = [`*://*.${CDN}/*`];
+
+/**
+ * Pure predicate: is this URL served by the video CDN? Used to keep the ACAO
+ * override scoped to the CDN (and testable without Electron).
+ */
+export function isVideoCdnUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === CDN || host.endsWith('.' + CDN);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Pure function: check if a URL matches any rule (for testing and header rewriter).
  * Converts Electron URL pattern wildcards to regex and tests the given URL.
  */

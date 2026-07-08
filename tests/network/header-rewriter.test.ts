@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { HEADER_RULES, matchesHeaderRule, FIREFOX_UA } from '../../src/network/header-rules';
+import {
+  HEADER_RULES,
+  matchesHeaderRule,
+  FIREFOX_UA,
+  CDN_ACAO_URL_PATTERNS,
+  isVideoCdnUrl,
+} from '../../src/network/header-rules';
 
 describe('HeaderRewriterService', () => {
   it('HEADER_RULES array contains at least 2 rules', () => {
@@ -59,5 +65,29 @@ describe('HeaderRewriterService', () => {
     expect(match).not.toBeNull();
     expect(match!.headers.referer).toBe('https://tau-video.xyz/');
     expect(match!.headers.userAgent).toBe(FIREFOX_UA);
+  });
+});
+
+describe('ACAO override scope (Turnstile-safe)', () => {
+  // Locks the scope so a future edit cannot silently re-globalize the override
+  // and break Cloudflare Turnstile again.
+  it('CDN_ACAO_URL_PATTERNS is scoped to the CDN only', () => {
+    expect(CDN_ACAO_URL_PATTERNS).toEqual(['*://*.tau-video.xyz/*']);
+  });
+
+  it('isVideoCdnUrl is true for CDN file and api URLs', () => {
+    expect(isVideoCdnUrl('https://cdn.tau-video.xyz/file/x.ts')).toBe(true);
+    expect(isVideoCdnUrl('https://tau-video.xyz/api/video/1')).toBe(true);
+  });
+
+  it('isVideoCdnUrl is false for challenges.cloudflare.com (Turnstile must not be rewritten)', () => {
+    expect(
+      isVideoCdnUrl('https://challenges.cloudflare.com/turnstile/v0/api.js')
+    ).toBe(false);
+  });
+
+  it('isVideoCdnUrl is false for the site origin and malformed input', () => {
+    expect(isVideoCdnUrl('https://animecix.tv/register')).toBe(false);
+    expect(isVideoCdnUrl('not a url')).toBe(false);
   });
 });

@@ -1,4 +1,8 @@
-import { HEADER_RULES, matchesHeaderRule } from './header-rules';
+import {
+  HEADER_RULES,
+  matchesHeaderRule,
+  CDN_ACAO_URL_PATTERNS,
+} from './header-rules';
 
 /**
  * INTENTIONAL — DO NOT REMOVE: CDN header rewriting is the designed auth mechanism.
@@ -45,12 +49,17 @@ export function setupHeaderRewriter(): void {
     }
   );
 
-  // INTENTIONAL CORS override for the built-in player (tau-player:// origin).
-  // Video CDNs return Access-Control-Allow-Origin: null which doesn't match
-  // tau-player://bundle, so the browser blocks the response.
-  // Only override when the existing value would block the request.
+  // INTENTIONAL CORS override for the built-in player. The video CDN returns
+  // Access-Control-Allow-Origin: null/a specific origin that doesn't match the
+  // player origin, so the browser blocks the media response without this.
   // DO NOT REMOVE — video playback breaks without this.
+  //
+  // SCOPED to the video CDN via { urls: CDN_ACAO_URL_PATTERNS }. It used to be
+  // registered globally, which forced ACAO '*' on EVERY response including
+  // challenges.cloudflare.com — that broke Cloudflare Turnstile, because a
+  // wildcard ACAO is invalid on credentialed CORS responses. Keep it scoped.
   session.defaultSession.webRequest.onHeadersReceived(
+    { urls: CDN_ACAO_URL_PATTERNS },
     (
       details: Electron.OnHeadersReceivedListenerDetails,
       callback: (response: Electron.HeadersReceivedResponse) => void
