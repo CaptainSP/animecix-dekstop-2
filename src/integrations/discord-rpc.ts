@@ -1,4 +1,5 @@
 import { Client } from '@xhayper/discord-rpc';
+import { getLastTitleId } from '../network/request-handler';
 
 export const CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID;
 
@@ -49,7 +50,7 @@ export class DiscordService {
   updateActivity(data: EpisodeData): void {
     if (!this.connected) return;
 
-    const state = data.isPlaying ? 'Izleniyor' : 'Duraklatildi';
+    const state = data.isPlaying ? 'İzleniyor' : 'Duraklatıldı';
     const episodeState = formatEpisodeState(
       data.seasonNumber,
       data.episodeNumber,
@@ -65,6 +66,7 @@ export class DiscordService {
       largeImageText: data.title,
       smallImageText: 'AnimeciX',
       type: 3, // Watching
+      buttons: [{ label: "AnimeciX'te İzle", url: getLastTitleId() ? `https://animecix.tv/titles/${getLastTitleId()}` : 'https://animecix.tv' }],
     }).catch(() => {
       // Silent fail -- connection may have dropped
       this.connected = false;
@@ -74,7 +76,7 @@ export class DiscordService {
   setIdle(): void {
     if (!this.connected) return;
     this.client.user?.setActivity({
-      state: 'Bakiniyor',
+      state: 'Bakınıyor...',
       largeImageKey: 'animecix-logo',
       smallImageText: 'AnimeciX',
       type: 3,

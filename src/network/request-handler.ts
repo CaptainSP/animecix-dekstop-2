@@ -1,6 +1,11 @@
 import { AdBlocker } from './ad-blocker';
 import { getPlayerBaseUrl } from '../player/tau-localhost';
 
+// Last titleId seen in first-party traffic - consumed by Discord RPC to build
+// the "Watch on AnimeciX" presence button link.
+let lastTitleId = '';
+export function getLastTitleId(): string { return lastTitleId; }
+
 // First-party domains that must never be blocked
 const SITE_DOMAIN = new URL(import.meta.env.VITE_SITE_URL).hostname;
 const CDN_DOMAIN = import.meta.env.VITE_CDN_DOMAIN;
@@ -80,6 +85,10 @@ export function setupRequestInterception(adBlocker: AdBlocker): void {
 
       // 2. First-party whitelist — never block animecix.tv or tau-video.xyz
       if (isFirstParty(url)) {
+        try {
+          const titleId = new URL(url).searchParams.get('titleId');
+          if (titleId) lastTitleId = titleId;
+        } catch { /* ignore malformed URLs */ }
         callback({});
         return;
       }
