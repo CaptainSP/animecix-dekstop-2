@@ -16,7 +16,7 @@ vi.mock('@xhayper/discord-rpc', () => {
   return { Client };
 });
 
-import { DiscordService, CLIENT_ID, formatEpisodeState } from '../../src/integrations/discord-rpc';
+import { DiscordService, CLIENT_ID, formatEpisodeState, buildWatchButtonUrl } from '../../src/integrations/discord-rpc';
 import { Client } from '@xhayper/discord-rpc';
 
 describe('CLIENT_ID', () => {
@@ -40,6 +40,25 @@ describe('formatEpisodeState', () => {
 
   it('pads single-digit season and episode to two digits', () => {
     expect(formatEpisodeState('3', '7', undefined)).toBe('S03E07');
+  });
+});
+
+describe('buildWatchButtonUrl', () => {
+  it('deep-links to the title when a numeric titleId is given', () => {
+    expect(buildWatchButtonUrl(1234)).toBe('https://animecix.tv/titles/1234');
+  });
+
+  it('deep-links to the title when a string titleId is given', () => {
+    expect(buildWatchButtonUrl('1234')).toBe('https://animecix.tv/titles/1234');
+  });
+
+  it('falls back to the homepage when titleId is undefined', () => {
+    expect(buildWatchButtonUrl(undefined)).toBe('https://animecix.tv');
+  });
+
+  it('falls back to the homepage when titleId is empty or zero', () => {
+    expect(buildWatchButtonUrl('')).toBe('https://animecix.tv');
+    expect(buildWatchButtonUrl(0)).toBe('https://animecix.tv');
   });
 });
 

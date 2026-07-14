@@ -2,14 +2,32 @@ import { Client } from '@xhayper/discord-rpc';
 
 export const CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID;
 
+// Public website base for the "Watch on AnimeciX" presence button. Always the
+// production site — the button is for the viewer's Discord friends, not the
+// local dev build, so it must not depend on VITE_SITE_URL (localhost in dev).
+const WATCH_BASE_URL = 'https://animecix.tv';
+
 export interface EpisodeData {
   title: string;
+  // Anime title id (maps to animecix.tv/titles/:id). Threaded through the
+  // episode:update presence payload from the website — the authoritative id of
+  // the episode being watched, so the button link never goes stale.
+  titleId?: string | number;
   seasonNumber?: string;
   episodeNumber?: string;
   translator?: string;
   isPlaying: boolean;
   startTimestamp?: number;
   posterUrl?: string;
+}
+
+/**
+ * Pure function: build the "Watch on AnimeciX" presence button URL.
+ * Deep-links to the watched title when a titleId is known, otherwise falls
+ * back to the homepage (e.g. before the website has supplied a titleId).
+ */
+export function buildWatchButtonUrl(titleId?: string | number): string {
+  return titleId ? `${WATCH_BASE_URL}/titles/${titleId}` : WATCH_BASE_URL;
 }
 
 /** Pure function: format episode state string for Discord */
@@ -49,7 +67,7 @@ export class DiscordService {
   updateActivity(data: EpisodeData): void {
     if (!this.connected) return;
 
-    const state = data.isPlaying ? 'Izleniyor' : 'Duraklatildi';
+    const state = data.isPlaying ? 'İzleniyor' : 'Duraklatıldı';
     const episodeState = formatEpisodeState(
       data.seasonNumber,
       data.episodeNumber,
@@ -65,6 +83,9 @@ export class DiscordService {
       largeImageText: data.title,
       smallImageText: 'AnimeciX',
       type: 3, // Watching
+      // Deep-link to the watched title; fall back to the homepage until the
+      // website supplies a titleId in the presence payload.
+      buttons: [{ label: "AnimeciX'te İzle", url: buildWatchButtonUrl(data.titleId) }],
     }).catch(() => {
       // Silent fail -- connection may have dropped
       this.connected = false;
@@ -74,7 +95,7 @@ export class DiscordService {
   setIdle(): void {
     if (!this.connected) return;
     this.client.user?.setActivity({
-      state: 'Bakiniyor',
+      state: 'Bakınıyor...',
       largeImageKey: 'animecix-logo',
       smallImageText: 'AnimeciX',
       type: 3,

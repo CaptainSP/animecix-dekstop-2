@@ -101,6 +101,7 @@ export interface AnimecixAPI {
   // forwards episode metadata/play state to main process via these channels.
   updateEpisode: (data: {
     title: string;
+    titleId?: string | number;
     seasonNumber?: string;
     episodeNumber?: string;
     translator?: string;
