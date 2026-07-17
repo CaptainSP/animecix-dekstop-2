@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   MediaPlayer,
   MediaProvider,
@@ -15,6 +15,7 @@ import { turkishTranslations } from './translations';
 import { SkipButton } from './SkipButton';
 import { MusicInfo } from './MusicInfo';
 import { NavigationButtons } from './NavigationButtons';
+import { EpisodeEndOverlay } from './EpisodeEndOverlay';
 import { EnhancementPanel } from './EnhancementPanel';
 import { LiveBadge } from './LiveBadge';
 import { ViewerCount } from './ViewerCount';
@@ -58,6 +59,7 @@ export function EmbedPlayer() {
   const { liveState, setLiveMode, liveSeek, updateViewerCount, endLiveMode } = useLiveMode(playerRef);
   const canvasRef = useColorExtraction();
   const enhancementContainerRef = useRef<HTMLDivElement>(null);
+  const [episodeEnded, setEpisodeEnded] = useState(false);
   const {
     preset, setPreset, filters, setFilters,
     isActive, hasOutput, stats, panelOpen, setPanelOpen,
@@ -72,6 +74,7 @@ export function EmbedPlayer() {
       }
       readyFiredRef.current = false;
       pendingVideoChange.current = true;
+      setEpisodeEnded(false);
       fetchVideo(videoId, videoVid);
     },
     [fetchVideo]
@@ -148,7 +151,7 @@ export function EmbedPlayer() {
   }, [setPrefetchedData]);
 
   // Parent message handler
-  const { navInfo } = useParentMessages(playerRef, changeSub, changeVideo, onInitVideoData, {
+  const { navInfo, animeTitle } = useParentMessages(playerRef, changeSub, changeVideo, onInitVideoData, {
     setLiveMode, liveSeek, updateViewerCount, endLiveMode,
   });
 
@@ -222,12 +225,24 @@ export function EmbedPlayer() {
   }
 
   function onEnded() {
+    setEpisodeEnded(true);
     if (isOffline && offlineNav?.nextEpisodeId) {
-      // INTENTIONAL `any` — offline player has no preload bridge. See OPEN-SOURCE-AUDIT.md §2.
-      (window as any).animecix?.playOfflineEpisode?.(offlineNav.nextEpisodeId); // eslint-disable-line @typescript-eslint/no-explicit-any
       return;
     }
     postToParent('ended');
+  }
+
+  function handleNextEpisode() {
+    if (isOffline && offlineNav?.nextEpisodeId) {
+      // INTENTIONAL `any` — offline player has no preload bridge. See OPEN-SOURCE-AUDIT.md §2.
+      (window as any).animecix?.playOfflineEpisode?.(offlineNav.nextEpisodeId); // eslint-disable-line @typescript-eslint/no-explicit-any
+    } else {
+      postToParent('next');
+    }
+  }
+
+  function handleDismissOverlay() {
+    setEpisodeEnded(false);
   }
 
   function onPlay() {
@@ -381,6 +396,18 @@ export function EmbedPlayer() {
           <NavigationButtons
             hasNext={navInfo.hasNext}
             hasPrev={navInfo.hasPrev}
+          />
+        )}
+        {episodeEnded && (
+          <EpisodeEndOverlay
+            animeTitle={
+              (isOffline ? offlineNav?.episodeTitle : (data.title_name || animeTitle)) || ''
+            }
+            hasNextEpisode={
+              isOffline ? !!offlineNav?.nextEpisodeId : !!navInfo?.hasNext
+            }
+            onNextEpisode={handleNextEpisode}
+            onDismiss={handleDismissOverlay}
           />
         )}
       </MediaPlayer>

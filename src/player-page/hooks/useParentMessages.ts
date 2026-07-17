@@ -29,6 +29,7 @@ export function useParentMessages(
   const pingRef = useRef(false);
   const pongRef = useRef(false);
   const [navInfo, setNavInfo] = useState<{ hasNext: boolean; hasPrev: boolean } | null>(null);
+  const [animeTitle, setAnimeTitle] = useState<string | null>(null);
 
   useEffect(() => {
     // Send currentTarget on mount
@@ -103,6 +104,11 @@ export function useParentMessages(
         // so the player doesn't need to fetch from tau-video.xyz API itself.
         // Cast at the postMessage boundary — data is validated by the main process IPC handler.
         onInitVideoData(data.video as Video, (data.meta as SkipMeta) ?? null);
+        // Extract anime title from video data for episode-end overlay
+        const video = data.video as Video;
+        if (video?.title_name) {
+          setAnimeTitle(video.title_name);
+        }
       } else if (data.action === 'captions' && player) {
         // Handle captions toggle from parent
         const textTracks = player.textTracks.toArray();
@@ -122,6 +128,8 @@ export function useParentMessages(
         liveMode.updateViewerCount(data.count);
       } else if (data.action === 'liveEnd' && liveMode) {
         liveMode.endLiveMode();
+      } else if (data.action === 'animeTitle') {
+        setAnimeTitle(data.title || null);
       }
     }
 
@@ -177,5 +185,5 @@ export function useParentMessages(
     };
   }, [playerRef, onChangeSub, onChangeVideo, onInitVideoData, liveMode]);
 
-  return { navInfo };
+  return { navInfo, animeTitle };
 }

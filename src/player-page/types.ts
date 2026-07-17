@@ -3,6 +3,7 @@ export interface Video {
   durationDifference?: number;
   duration: number;
   title_id: string;
+  title_name?: string;
   season_number: string;
   episode_number: string;
   ratio?: number;
