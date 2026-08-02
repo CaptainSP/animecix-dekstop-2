@@ -27,6 +27,7 @@
     "lint": "eslint --ext .ts,.tsx .",
     "pretest": "npm rebuild better-sqlite3 2>/dev/null || true",
     "test": "vitest run --reporter=dot",
+    "dev:player": "vite --config vite.player.config.mts --open /embed/69d150efb923b3ffeb12b5ad",
     "build:player": "vite build --config vite.player.config.mts",
     "build:library": "vite build --config vite.library.config.mts",
     "postinstall": "npx @electron/rebuild -f -w better-sqlite3",

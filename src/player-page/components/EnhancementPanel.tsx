@@ -94,6 +94,35 @@ export function EnhancementPanel({
     };
   }, [onPanelToggle, panelOpen]);
 
+  // Scale-to-fit: the panel must never scroll. When its content is taller than
+  // the available viewport budget (small non-fullscreen windows), shrink the
+  // whole panel so every option stays visible — no scrollbar, no clipping.
+  useEffect(() => {
+    if (!panelOpen) return;
+
+    const panel = menuRef.current?.querySelector<HTMLDivElement>('.ve-panel');
+    if (!panel) return;
+
+    const fitPanel = () => {
+      const maxHeight = parseFloat(getComputedStyle(panel).maxHeight);
+      const scale =
+        maxHeight > 0 && panel.scrollHeight > maxHeight
+          ? maxHeight / panel.scrollHeight
+          : 1;
+      panel.style.transformOrigin = 'bottom right';
+      panel.style.transform = scale < 1 ? `scale(${scale})` : '';
+      panel.style.overflowY = scale < 1 ? 'hidden' : 'auto';
+    };
+
+    fitPanel();
+    window.addEventListener('resize', fitPanel);
+    return () => {
+      window.removeEventListener('resize', fitPanel);
+      panel.style.transform = '';
+      panel.style.overflowY = 'auto';
+    };
+  }, [panelOpen, isActive, stats]);
+
   return (
     <div className="ve-menu" ref={menuRef}>
       <button

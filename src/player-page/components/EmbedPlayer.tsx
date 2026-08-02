@@ -20,6 +20,7 @@ import { LiveBadge } from './LiveBadge';
 import { ViewerCount } from './ViewerCount';
 import { useVideoData } from '../hooks/useVideoData';
 import { useParentMessages, postToParent } from '../hooks/useParentMessages';
+import { useQualityPersistence } from '../hooks/useQualityPersistence';
 import { useVideoEnhancement } from '../hooks/useVideoEnhancement';
 import { useLiveMode } from '../hooks/useLiveMode';
 import type { Video, SkipMeta } from '../types';
@@ -58,6 +59,14 @@ export function EmbedPlayer() {
   const { liveState, setLiveMode, liveSeek, updateViewerCount, endLiveMode } = useLiveMode(playerRef);
   const canvasRef = useColorExtraction();
   const enhancementContainerRef = useRef<HTMLDivElement>(null);
+
+  // Re-applies the manual quality preference after every episode switch
+  // (PLAY-05) — the "Otomatik" quality menu option resets otherwise.
+  const sourcesSignature = data
+    ? data.hls || data.urls.map((item) => item.url).join('|')
+    : null;
+  useQualityPersistence(playerRef, sourcesSignature);
+
   const {
     preset, setPreset, filters, setFilters,
     isActive, hasOutput, stats, panelOpen, setPanelOpen,

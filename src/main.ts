@@ -10,12 +10,14 @@ import { registerLibraryProtocol } from './library/library-protocol';
 import { app, BrowserWindow, net } from 'electron';
 import { startPlayerServer, getPlayerBaseUrl } from './player/tau-localhost';
 import path from 'node:path';
+import { existsSync } from 'node:fs';
 import started from 'electron-squirrel-startup';
 import { StorageService } from './storage/StorageService';
 import { createWindow, setupCloseIntercept, markQuitting } from './window/WindowService';
 import { registerWindowIpc } from './window/window.ipc';
 import { AdBlocker } from './network/ad-blocker';
 import { setupRequestInterception } from './network/request-handler';
+import { setupBatchDownloadInjection } from './network/batch-download';
 import { setupHeaderRewriter } from './network/header-rewriter';
 import {
   registerDeepLinkProtocol,
@@ -28,12 +30,14 @@ import { DownloadQueue } from './download/DownloadQueue';
 import { StreamCache } from './cache/StreamCache';
 import { CacheEvictor } from './cache/CacheEvictor';
 import { registerDownloadIpc } from './download/download.ipc';
+import { pruneMissingDownloads } from './download/prune-missing';
 import { registerCacheIpc } from './cache/cache.ipc';
 import { registerPlayerIpc } from './player/player.ipc';
 import { TrayManager } from './download/TrayManager';
 import { UpdaterService } from './updater/UpdaterService';
 import { registerUpdaterIpc } from './updater/updater.ipc';
 import { UpdaterBanner } from './updater/UpdaterBanner';
+import { setupWhatsNewAnnouncement } from './updater/whats-new';
 import { LibraryManager } from './library/LibraryManager';
 import { registerLibraryIpc } from './library/library.ipc';
 
@@ -102,6 +106,10 @@ if (!gotLock) {
 
   // App ready — initialize services and create window
   app.whenReady().then(() => {
+    // Detect fresh installs BEFORE StorageService creates the SQLite file —
+    // the whats-new announcement must only greet users who updated, never
+    // first-time installers.
+    const isFreshInstall = !existsSync(path.join(app.getPath('userData'), 'animecix.db'));
     storage = new StorageService();
     mainWindow = createWindow(storage);
     registerWindowIpc(mainWindow);
@@ -124,6 +132,9 @@ if (!gotLock) {
     adBlocker.loadFilterLists();
     setupRequestInterception(adBlocker);
     setupHeaderRewriter();
+
+    // Phase 8: "Toplu İndir" — inject batch download UI into title pages
+    setupBatchDownloadInjection(mainWindow!.webContents);
 
     // Phase 2: Discord Rich Presence
     discord = new DiscordService();
@@ -152,9 +163,17 @@ if (!gotLock) {
     // Register download/cache/storage IPC handlers
     registerDownloadIpc(mainWindow, queue, cache, storage, evictor, downloadsDir, cacheDir);
 
+    // Drops DB records for downloads whose video file was deleted manually
+    // from the downloads folder, and re-checks whenever the window regains
+    // focus (the user may delete files while the app is open or minimized).
+    pruneMissingDownloads(storage, downloadsDir);
+    mainWindow.on('focus', () => {
+      if (storage) pruneMissingDownloads(storage, downloadsDir);
+    });
+
     // Phase 7: Library BrowserView overlay + IPC handlers
     libraryManager = new LibraryManager(mainWindow);
-    registerLibraryIpc(mainWindow, storage!, libraryManager);
+    registerLibraryIpc(mainWindow, storage!, libraryManager, downloadsDir);
 
     // System tray for background downloads
     trayManager = new TrayManager(mainWindow, queue);
@@ -266,6 +285,10 @@ if (!gotLock) {
 
     // In-app banner overlay for update-downloaded event
     updaterBanner = new UpdaterBanner(mainWindow, updaterService);
+
+    // What's-new announcement — greets users who updated the app (never fresh
+    // installs) with a summary of new features, once per version.
+    setupWhatsNewAnnouncement(mainWindow, storage, isFreshInstall);
 
     // Phase 2: Handle buffered deep link from cold start (process.argv)
     const bufferedUrl = extractDeepLinkFromArgs(process.argv);
