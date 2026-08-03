@@ -1,7 +1,7 @@
 import { useMediaContext, useMediaState } from '@vidstack/react';
+import { RepeatIcon, SettingsSwitchIcon, VolumeHighIcon } from '@vidstack/react/icons';
 import {
   DefaultMenuCheckbox,
-  DefaultMenuItem,
   useDefaultLayoutContext,
   useDefaultLayoutWord,
 } from '@vidstack/react/player/layouts/default';
@@ -28,9 +28,11 @@ function LoopCheckbox() {
   };
 
   return (
-    <DefaultMenuItem label={label}>
+    <div className="vds-menu-item">
+      <RepeatIcon className="vds-menu-item-icon vds-icon" />
+      <div className="vds-menu-item-label">{label}</div>
       <DefaultMenuCheckbox label={label} storageKey="vds-player::user-loop" onChange={onChange} />
-    </DefaultMenuItem>
+    </div>
   );
 }
 
@@ -47,14 +49,16 @@ function AnnouncementsCheckbox() {
   };
 
   return (
-    <DefaultMenuItem label={label}>
+    <div className="vds-menu-item">
+      <VolumeHighIcon className="vds-menu-item-icon vds-icon" />
+      <div className="vds-menu-item-label">{label}</div>
       <DefaultMenuCheckbox
         label={label}
         defaultChecked
         storageKey="vds-player::announcements"
         onChange={onChange}
       />
-    </DefaultMenuItem>
+    </div>
   );
 }
 
@@ -75,14 +79,16 @@ function KeyboardAnimationsCheckbox() {
   };
 
   return (
-    <DefaultMenuItem label={label}>
+    <div className="vds-menu-item">
+      <SettingsSwitchIcon className="vds-menu-item-icon vds-icon" />
+      <div className="vds-menu-item-label">{label}</div>
       <DefaultMenuCheckbox
         label={label}
         defaultChecked
         storageKey="vds-player::keyboard-animations"
         onChange={onChange}
       />
-    </DefaultMenuItem>
+    </div>
   );
 }
 

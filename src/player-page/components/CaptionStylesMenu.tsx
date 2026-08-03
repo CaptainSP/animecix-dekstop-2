@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Menu, Slider, useMediaPlayer, useMediaState } from '@vidstack/react';
+import { SubtitlesIcon } from '@vidstack/react/icons';
 import {
   DefaultMenuButton,
   DefaultMenuItem,
@@ -328,7 +329,7 @@ export function CaptionStylesMenu() {
 
   return (
     <Menu.Root className="vds-menu">
-      <DefaultMenuButton label={label} />
+      <DefaultMenuButton label={label} Icon={SubtitlesIcon} />
       <Menu.Items className="vds-menu-items vds-font-style-items">
         <DefaultMenuSection label={fontLabel}>
           <FontRadioControl

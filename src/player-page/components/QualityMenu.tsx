@@ -1,4 +1,5 @@
 import { Menu, useMediaContext, useMediaState } from '@vidstack/react';
+import { ComputerIcon } from '@vidstack/react/icons';
 import {
   DefaultMenuButton,
   DefaultMenuRadioGroup,
@@ -96,7 +97,7 @@ export function QualityMenu() {
 
   return (
     <Menu.Root className="vds-menu">
-      <DefaultMenuButton label={qualityWord} hint={currentLabel} />
+      <DefaultMenuButton label={qualityWord} hint={currentLabel} Icon={ComputerIcon} />
       <Menu.Items className="vds-menu-items">
         <DefaultMenuRadioGroup value={currentValue} options={options} onChange={onSelect} />
       </Menu.Items>
