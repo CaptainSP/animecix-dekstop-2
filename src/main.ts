@@ -13,7 +13,7 @@ import path from 'node:path';
 import { existsSync } from 'node:fs';
 import started from 'electron-squirrel-startup';
 import { StorageService } from './storage/StorageService';
-import { createWindow, setupCloseIntercept, markQuitting } from './window/WindowService';
+import { createWindow, setupCloseIntercept, markQuitting, LOCAL_DEV_SITE_URL } from './window/WindowService';
 import { registerWindowIpc } from './window/window.ipc';
 import { AdBlocker } from './network/ad-blocker';
 import { setupRequestInterception } from './network/request-handler';
@@ -40,6 +40,7 @@ import { UpdaterBanner } from './updater/UpdaterBanner';
 import { setupWhatsNewAnnouncement } from './updater/whats-new';
 import { LibraryManager } from './library/LibraryManager';
 import { registerLibraryIpc } from './library/library.ipc';
+import { shouldOpenLibraryOnLoadFailure } from './library/offline-fallback';
 
 // Ignores GPU blocklist for all platforms to force hardware acceleration
 app.commandLine.appendSwitch('ignore-gpu-blocklist');
@@ -269,11 +270,34 @@ if (!gotLock) {
       }
     });
 
-    // Per D-04: Auto-show library when app opens with no internet
-    const isOnline = net.isOnline();
-    if (!isOnline) {
+    // Per D-04: Auto-show library when app opens with no internet.
+    // net.isOnline() is only a fast path — it can report "online" while the
+    // site is unreachable (e.g. router up but no WAN). The did-fail-load
+    // handler below is the authoritative fallback: a network-level failure
+    // of the main frame means the website cannot be reached, so we drop
+    // into the offline library instead of showing a blank window.
+    if (!net.isOnline()) {
       libraryManager.show();
     }
+
+    mainWindow.webContents.on(
+      'did-fail-load',
+      (_event, errorCode, _errorDescription, validatedURL, isMainFrame) => {
+        if (
+          shouldOpenLibraryOnLoadFailure({
+            errorCode,
+            isMainFrame,
+            validatedURL,
+            devSiteURL: LOCAL_DEV_SITE_URL,
+            isPackaged: app.isPackaged,
+            libraryVisible: libraryManager.isVisible(),
+          })
+        ) {
+          console.warn(`[main] Website unreachable (${errorCode}); opening offline library.`);
+          libraryManager.show();
+        }
+      },
+    );
 
     // Phase 4: Auto-update via electron-updater
     updaterService = new UpdaterService();
