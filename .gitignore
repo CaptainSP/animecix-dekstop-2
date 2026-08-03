@@ -18,6 +18,9 @@ Thumbs.db
 # Test coverage
 coverage/
 
+# Player menu inspection harness artifacts (docs/scripts output)
+docs/scripts/shots/
+
 # Logs
 *.log
 

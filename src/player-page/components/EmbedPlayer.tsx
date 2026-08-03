@@ -16,6 +16,11 @@ import { SkipButton } from './SkipButton';
 import { MusicInfo } from './MusicInfo';
 import { NavigationButtons } from './NavigationButtons';
 import { EnhancementPanel } from './EnhancementPanel';
+import { FlatSettingsMenu } from './FlatSettingsMenu';
+import { CaptionStylesMenu } from './CaptionStylesMenu';
+import { CaptionsMenu } from './CaptionsMenu';
+import { QualityMenu } from './QualityMenu';
+import { SpeedMenu } from './SpeedMenu';
 import { LiveBadge } from './LiveBadge';
 import { ViewerCount } from './ViewerCount';
 import { useVideoData } from '../hooks/useVideoData';
@@ -368,8 +373,17 @@ export function EmbedPlayer() {
           icons={defaultLayoutIcons}
           translations={turkishTranslations}
           thumbnails={isOffline ? undefined : import.meta.env.VITE_API_BASE_URL + '/preview/' + id}
-          playbackRates={[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4]}
+          playbackRates={[0.25, 0.5, 1, 1.25, 1.5, 2]}
           slots={{
+            settingsMenuItemsStart: <FlatSettingsMenu />,
+            settingsMenuItemsEnd: (
+              <>
+                <CaptionStylesMenu />
+                <CaptionsMenu />
+                <QualityMenu />
+                <SpeedMenu />
+              </>
+            ),
             afterSettingsMenu: (
               <EnhancementPanel
                 preset={preset}

@@ -48,11 +48,141 @@
   --media-brand: #0074e4;
   --media-focus-ring-color: rgba(0, 116, 228, 0.65);
   --media-slider-track-fill-bg: #0074e4;
-  --media-menu-bg: rgba(10, 10, 10, 0.92);
+  --media-menu-bg: rgba(10, 10, 10, 0.62);
   --media-menu-border: 1px solid rgba(255, 255, 255, 0.12);
+  --media-menu-border-radius: 12px;
+  --media-menu-item-border-radius: 8px;
+  --media-menu-section-border-radius: 8px;
+  --media-menu-item-height: 32px;
+  --media-menu-padding: 8px;
+  --media-menu-min-width: 300px;
   --media-tooltip-bg: rgba(10, 10, 10, 0.92);
   --media-tooltip-color: #fff;
   font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Glass effect for the settings menu - the default backdrop blur (4px) is
+   invisible behind the old 0.92 opacity background, so raise it and let the
+   video bleed through the now semi-transparent --media-menu-bg above. */
+.vds-menu-items[data-root] {
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+
+/* Pin the settings menu to the far right edge of the player instead of the
+   settings button (which sits ~100px left of the edge next to PiP/fullscreen).
+   The menu is absolutely positioned inside .vds-controls (inset: 0), so the
+   right offset aligns it with the controls padding. */
+.vds-settings-menu-items[data-root][data-placement] {
+  left: auto !important;
+  right: clamp(12px, 2vw, 24px) !important;
+}
+
+/* Submenu (Kalite/Hız) opens and closes with a 0.35s height transition that
+   stretches the menu into intermediate heights. Snap instead of animating. */
+.vds-menu-items[data-root] {
+  height: auto !important;
+  transition: none !important;
+}
+
+/* Menu open animation: fade + rise + scale-in. The default vds-menu-enter only
+   fades the menu; this gives it a subtle pop that is not tied to the (disabled)
+   height transition above. */
+@keyframes animecix-menu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.vds-menu-items[data-root][aria-hidden='false'] {
+  animation: animecix-menu-enter 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion) {
+  .vds-menu-items[data-root][aria-hidden='false'] {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* Submenu panels (Kalite/Hız/Altyazı Tarzları) slide in from the right when
+   they open. The root height snaps instantly (see above), so the fade + slide
+   keeps the swap from feeling like an empty pop. */
+@keyframes animecix-submenu-enter {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes animecix-submenu-item-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vds-menu-items[data-submenu][aria-hidden='false'] {
+  animation: animecix-submenu-enter 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Radio options cascade in right after the panel - each row a few ms later
+   than the one above it (up to 8 options, the longest quality list). */
+.vds-menu-items[data-submenu][aria-hidden='false'] .vds-radio {
+  animation: animecix-submenu-item-enter 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.vds-menu-items[data-submenu][aria-hidden='false'] .vds-radio:nth-child(1) {
+  animation-delay: 0.03s;
+}
+
+.vds-menu-items[data-submenu][aria-hidden='false'] .vds-radio:nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.vds-menu-items[data-submenu][aria-hidden='false'] .vds-radio:nth-child(3) {
+  animation-delay: 0.09s;
+}
+
+.vds-menu-items[data-submenu][aria-hidden='false'] .vds-radio:nth-child(4) {
+  animation-delay: 0.12s;
+}
+
+.vds-menu-items[data-submenu][aria-hidden='false'] .vds-radio:nth-child(5) {
+  animation-delay: 0.15s;
+}
+
+.vds-menu-items[data-submenu][aria-hidden='false'] .vds-radio:nth-child(6) {
+  animation-delay: 0.18s;
+}
+
+.vds-menu-items[data-submenu][aria-hidden='false'] .vds-radio:nth-child(7) {
+  animation-delay: 0.21s;
+}
+
+.vds-menu-items[data-submenu][aria-hidden='false'] .vds-radio:nth-child(8) {
+  animation-delay: 0.24s;
+}
+
+@media (prefers-reduced-motion) {
+  .vds-menu-items[data-submenu][aria-hidden='false'],
+  .vds-menu-items[data-submenu][aria-hidden='false'] .vds-radio {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 .vds-controls-group {
@@ -64,6 +194,15 @@
 }
 
 .vds-audio-menu {
+  display: none !important;
+}
+
+/* Hide the default settings submenus — they are replaced by flat menu items
+   injected via the settingsMenuItemsStart/End slots (FlatSettingsMenu.tsx,
+   QualityMenu.tsx, SpeedMenu.tsx, CaptionStylesMenu.tsx, CaptionsMenu.tsx). */
+.vds-playback-menu,
+.vds-captions-menu,
+.vds-accessibility-menu {
   display: none !important;
 }
 

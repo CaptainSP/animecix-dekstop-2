@@ -112,6 +112,9 @@ export function EnhancementPanel({
       panel.style.transformOrigin = 'bottom right';
       panel.style.transform = scale < 1 ? `scale(${scale})` : '';
       panel.style.overflowY = scale < 1 ? 'hidden' : 'auto';
+      // When fitted, drop the entrance animation (it would override the
+      // inline scale transform via its fill-mode keyframes).
+      panel.classList.toggle('ve-panel-fit', scale < 1);
     };
 
     fitPanel();

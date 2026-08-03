@@ -34,25 +34,46 @@
 }
 
 .ve-panel {
-  position: absolute;
-  right: 0;
-  bottom: 68px;
+  /* Pinned to the player's right edge (same clamp offset as the settings
+     menu in EmbedPlayer.css). Fixed to the iframe viewport because the
+     toggle's own containing block sits ~100px away from the edge. */
+  position: fixed;
+  right: clamp(12px, 2vw, 24px);
+  /* Bottom edge must sit at the same level as the settings menu (75px from
+     the bottom — measured: the placement engine hugs the controls row). */
+  bottom: 75px;
   z-index: 999998;
   width: min(320px, calc(100vw - 28px));
   max-height: min(520px, calc(100vh - 92px));
   overflow-y: auto;
-  background:
-    linear-gradient(180deg, rgba(24, 24, 24, 0.96), rgba(8, 8, 8, 0.94));
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  /* Glass look must match the settings menus (EmbedPlayer.css defines the
+     --media-menu-* tokens on .vds-video-layout, so they cascade here). */
+  background: var(--media-menu-bg, rgba(10, 10, 10, 0.62));
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: var(--media-menu-border, 1px solid rgba(255, 255, 255, 0.12));
+  border-radius: var(--media-menu-border-radius, 12px);
   padding: 12px;
   color: #fff;
   font-family: 'Inter', 'Helvetica Neue', sans-serif;
   font-size: 14px;
   pointer-events: auto;
   box-shadow: 0 20px 52px rgba(0, 0, 0, 0.55);
+  /* Same entrance animation as the settings menu (animecix-menu-enter in
+     EmbedPlayer.css): fade + rise + scale-in. */
+  animation: animecix-menu-enter 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* The scale-to-fit JS (EnhancementPanel.tsx) applies an inline transform that
+   the fill-mode animation would override — skip the entrance for fitted panels. */
+.ve-panel.ve-panel-fit {
+  animation: none;
+}
+
+@media (prefers-reduced-motion) {
+  .ve-panel {
+    animation: none;
+  }
 }
 
 .ve-panel-header {
@@ -250,7 +271,7 @@
   }
 
   .ve-panel {
-    bottom: 62px;
-    right: -48px;
+    bottom: 69px;
+    right: 12px;
   }
 }
