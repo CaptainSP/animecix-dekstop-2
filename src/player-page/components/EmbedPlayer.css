@@ -48,7 +48,7 @@
   --media-brand: #0074e4;
   --media-focus-ring-color: rgba(0, 116, 228, 0.65);
   --media-slider-track-fill-bg: #0074e4;
-  --media-menu-bg: rgba(10, 10, 10, 0.62);
+  --media-menu-bg: rgba(10, 10, 10, 0.48);
   --media-menu-border: 1px solid rgba(255, 255, 255, 0.12);
   --media-menu-border-radius: 12px;
   --media-menu-item-border-radius: 8px;
@@ -178,7 +178,7 @@
   width: auto !important;
   z-index: 2 !important;
   /* Mask the scrolling list behind the header (Altyazı Tarzları). */
-  background: var(--media-menu-bg, rgba(10, 10, 10, 0.62)) !important;
+  background: var(--media-menu-bg, rgba(10, 10, 10, 0.48)) !important;
 }
 
 .vds-quick-submenu[data-open] {
