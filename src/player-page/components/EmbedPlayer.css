@@ -161,19 +161,47 @@
   overflow-x: hidden !important;
 }
 
+/* The open submenu's trigger row acts as the panel header (label + back
+   navigation). It normally stays in the root's flow behind the anchored
+   submenu — dimmed under the panel background and unclickable — so the first
+   list item (e.g. 0.25x) ends up under it. Lift it above its own panel and
+   pin it to the panel's top. Works for nested quick submenus too (the
+   containing block is the nearest positioned ancestor = the open panel). */
+.vds-menu:has(> .vds-menu-items.vds-quick-submenu[data-open]) > .vds-menu-item {
+  position: absolute !important;
+  top: var(--media-menu-padding, 8px) !important;
+  left: var(--media-menu-padding, 8px) !important;
+  right: var(--media-menu-padding, 8px) !important;
+  /* The default sticky-row rule keeps width: 100%, which over-constrains the
+     left/right offsets and makes the header stick out past the panel's right
+     edge by the offset amount. Resolve width from the offsets instead. */
+  width: auto !important;
+  z-index: 2 !important;
+  /* Mask the scrolling list behind the header (Altyazı Tarzları). */
+  background: var(--media-menu-bg, rgba(10, 10, 10, 0.62)) !important;
+}
+
 .vds-quick-submenu[data-open] {
   position: absolute !important;
   inset: 0 !important;
   /* With inset 0 and height auto the box sizes to its content and bottom: 0 is
      ignored, leaving a gap under the panel. Pin the height to fill the root. */
   height: 100% !important;
-  padding: var(--media-menu-padding, 8px) !important;
+  /* Header row (38px) + panel padding, so the list starts below the header. */
+  padding: calc(var(--media-menu-padding, 8px) + 38px) var(--media-menu-padding, 8px) var(--media-menu-padding, 8px) !important;
   display: flex;
   flex-direction: column;
   /* Center short lists (Kalite/Hız) and align to start when the content is
      taller than the panel (Altyazı Tarzları) so scrolling starts from the top. */
   justify-content: safe center;
   overflow-y: auto !important;
+}
+
+/* Tighter radio row spacing in the quick submenus: default rows are 38px
+   (18px text + 2×10px padding), bring them to 32px. */
+.vds-quick-submenu[data-open] .vds-radio {
+  padding-top: 7px !important;
+  padding-bottom: 7px !important;
 }
 
 /* Radio options cascade in right after the panel - each row a few ms later

@@ -192,6 +192,28 @@ async function main() {
       const yDelta = m.root && m.sub ? m.sub.y - m.root.y : null;
       const hDelta = m.root && m.sub ? m.sub.h - m.root.h : null;
       console.log(`[${label}]`, JSON.stringify({ ...m, yDelta, hDelta }));
+      const rows = await page.evaluate(() => {
+        const sub = document.querySelector('.vds-menu-items[data-submenu][data-open]');
+        const root = document.querySelector('.vds-settings-menu-items[data-root][data-open]');
+        const list = [];
+        for (const el of sub?.children ?? []) {
+          for (const row of el.children ?? []) {
+            const b = row.getBoundingClientRect();
+            list.push({ cls: (row.className || '').toString().slice(0, 40), y: Math.round(b.y), h: Math.round(b.height) });
+          }
+        }
+        const sticky = [];
+        for (const el of root?.children ?? []) {
+          if ((el.className || '').toString().includes('vds-menu-item')) {
+            const b = el.getBoundingClientRect();
+            sticky.push({ y: Math.round(b.y), h: Math.round(b.height), text: (el.textContent || '').slice(0, 40) });
+          }
+        }
+        return { list, sticky };
+      });
+      console.log(`[rows ${label}]`, JSON.stringify(rows));
+      const clip = { x: m.root?.x - 20 ?? 900, y: m.root?.y - 40 ?? 420, width: 340, height: 360 };
+      await page.screenshot({ path: path.join(__dirname, 'shots', `submenu-${label.toLowerCase()}.png`), clip });
       await dumpRows(`after-${label}`);
     }
 
