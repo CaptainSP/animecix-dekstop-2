@@ -178,9 +178,10 @@
   width: auto !important;
   z-index: 2 !important;
   /* Mask the scrolling list behind the header (Altyazı Tarzları). */
-  /* Slightly transparent header — lighter than the panel body so the video
-     bleeds through, but still distinct enough to read the label. */
-  background: rgba(10, 10, 10, 0.30) !important;
+  /* No background — video shows through. A bottom border marks the header
+     boundary so it stays visually distinct from the list. */
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
 .vds-quick-submenu[data-open] {
