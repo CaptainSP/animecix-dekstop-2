@@ -98,7 +98,7 @@ export function QualityMenu() {
   return (
     <Menu.Root className="vds-menu">
       <DefaultMenuButton label={qualityWord} hint={currentLabel} Icon={ComputerIcon} />
-      <Menu.Items className="vds-menu-items">
+      <Menu.Items className="vds-menu-items vds-quick-submenu">
         <DefaultMenuRadioGroup value={currentValue} options={options} onChange={onSelect} />
       </Menu.Items>
     </Menu.Root>

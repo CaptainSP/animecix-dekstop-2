@@ -219,7 +219,7 @@ function FontRadioControl({
   return (
     <Menu.Root className="vds-menu">
       <DefaultMenuButton label={hint} hint={currentLabel} />
-      <Menu.Items className="vds-menu-items">
+      <Menu.Items className="vds-menu-items vds-quick-submenu">
         <DefaultMenuRadioGroup
           value={current}
           options={options}
@@ -330,7 +330,7 @@ export function CaptionStylesMenu() {
   return (
     <Menu.Root className="vds-menu">
       <DefaultMenuButton label={label} Icon={SubtitlesIcon} />
-      <Menu.Items className="vds-menu-items vds-font-style-items">
+      <Menu.Items className="vds-menu-items vds-font-style-items vds-quick-submenu">
         <DefaultMenuSection label={fontLabel}>
           <FontRadioControl
             type="fontFamily"

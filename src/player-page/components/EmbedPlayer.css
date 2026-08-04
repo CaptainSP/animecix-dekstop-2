@@ -56,6 +56,13 @@
   --media-menu-item-height: 32px;
   --media-menu-padding: 8px;
   --media-menu-min-width: 300px;
+  /* Root settings panel height: 7 rows × 38px + 2×8px padding + 2×1px border.
+     The quick submenus are pinned inside the root panel (see the :has rule
+     below), so this value must match the settings list height. vidstack
+     re-measures --menu-height whenever menu content changes (submenu toggles),
+     which would otherwise shrink the panel (Kalite → ~246px) or balloon it
+     (Altyazı Tarzları → ~828px). Keep in sync with the settings row count. */
+  --animecix-settings-height: 284px;
   --media-tooltip-bg: rgba(10, 10, 10, 0.92);
   --media-tooltip-color: #fff;
   font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -110,17 +117,17 @@
   }
 }
 
-/* Submenu panels (Kalite/Hız/Altyazı Tarzları) slide in from the right when
-   they open. The root height snaps instantly (see above), so the fade + slide
-   keeps the swap from feeling like an empty pop. */
+/* Submenu panels (Kalite/Hız/Altyazı Tarzları) slide in from the right and
+   grow (scale) when they open. The root height snaps instantly (see above),
+   so the fade + slide + grow keeps the swap from feeling like an empty pop. */
 @keyframes animecix-submenu-enter {
   from {
     opacity: 0;
-    transform: translateX(12px);
+    transform: translateX(12px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateX(0) scale(1);
   }
 }
 
@@ -137,6 +144,36 @@
 
 .vds-menu-items[data-submenu][aria-hidden='false'] {
   animation: animecix-submenu-enter 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Hız & Kalite submenus: same box as the settings menu (same top and height).
+   By default the submenu is in-flow below its trigger row (vidstack keeps the
+   row as a sticky header), which offsets the panel from the root menu. Pinning
+   it over the root menu requires the root height to stay stable, so pin it to
+   the settings list height instead of --menu-height (which vidstack re-measures
+   whenever content changes — see the --animecix-settings-height comment). */
+.vds-settings-menu-items[data-root]:has(.vds-quick-submenu[data-open]) {
+  height: var(--animecix-settings-height) !important;
+  /* The sticky trigger row overflows the content box by ~2px, which draws a
+     thin horizontal scrollbar that eats ~10px of client height. That shrinks
+     the anchored submenu (height: 100%) and leaves a lighter glass band at the
+     bottom of the panel. Clip instead of scroll — the submenu scrolls itself. */
+  overflow-x: hidden !important;
+}
+
+.vds-quick-submenu[data-open] {
+  position: absolute !important;
+  inset: 0 !important;
+  /* With inset 0 and height auto the box sizes to its content and bottom: 0 is
+     ignored, leaving a gap under the panel. Pin the height to fill the root. */
+  height: 100% !important;
+  padding: var(--media-menu-padding, 8px) !important;
+  display: flex;
+  flex-direction: column;
+  /* Center short lists (Kalite/Hız) and align to start when the content is
+     taller than the panel (Altyazı Tarzları) so scrolling starts from the top. */
+  justify-content: safe center;
+  overflow-y: auto !important;
 }
 
 /* Radio options cascade in right after the panel - each row a few ms later

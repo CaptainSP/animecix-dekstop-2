@@ -2,7 +2,6 @@ import { Menu, useMediaContext, useMediaState } from '@vidstack/react';
 import { OdometerIcon } from '@vidstack/react/icons';
 import {
   DefaultMenuButton,
-  DefaultMenuSection,
   useDefaultLayoutContext,
   useDefaultLayoutWord,
 } from '@vidstack/react/player/layouts/default';
@@ -57,22 +56,20 @@ export function SpeedMenu() {
   return (
     <Menu.Root className="vds-menu">
       <DefaultMenuButton label={speedWord} hint={valueLabel} Icon={OdometerIcon} />
-      <Menu.Items className="vds-menu-items">
-        <DefaultMenuSection label={speedWord} value={valueLabel}>
-          <Menu.RadioGroup className="vds-radio-group" role="radiogroup" value={String(playbackRate)}>
-            {options.map((rate) => (
-              <Menu.Radio
-                className="vds-radio"
-                value={String(rate)}
-                onSelect={() => remote.changePlaybackRate(rate)}
-                key={rate}
-              >
-                <icons.Menu.RadioCheck className="vds-icon" />
-                <span className="vds-radio-label">{formatSpeedValue(rate, normalWord)}</span>
-              </Menu.Radio>
-            ))}
-          </Menu.RadioGroup>
-        </DefaultMenuSection>
+      <Menu.Items className="vds-menu-items vds-quick-submenu">
+        <Menu.RadioGroup className="vds-radio-group" role="radiogroup" value={String(playbackRate)}>
+          {options.map((rate) => (
+            <Menu.Radio
+              className="vds-radio"
+              value={String(rate)}
+              onSelect={() => remote.changePlaybackRate(rate)}
+              key={rate}
+            >
+              <icons.Menu.RadioCheck className="vds-icon" />
+              <span className="vds-radio-label">{formatSpeedValue(rate, normalWord)}</span>
+            </Menu.Radio>
+          ))}
+        </Menu.RadioGroup>
       </Menu.Items>
     </Menu.Root>
   );
