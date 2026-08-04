@@ -178,10 +178,9 @@
   width: auto !important;
   z-index: 2 !important;
   /* Mask the scrolling list behind the header (Altyazı Tarzları). */
-  /* No background — video shows through. A bottom border marks the header
-     boundary so it stays visually distinct from the list. */
+  /* Fully transparent — no background, no border, just text over the video. */
   background: transparent !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-bottom: none !important;
 }
 
 .vds-quick-submenu[data-open] {
