@@ -191,9 +191,10 @@
   padding: calc(var(--media-menu-padding, 8px) + 38px) var(--media-menu-padding, 8px) var(--media-menu-padding, 8px) !important;
   display: flex;
   flex-direction: column;
-  /* Center short lists (Kalite/Hız) and align to start when the content is
-     taller than the panel (Altyazı Tarzları) so scrolling starts from the top. */
-  justify-content: safe center;
+  /* Align the list to the start — short lists (Kalite, Hız) sit flush at
+     the top below the header, and tall lists (Altyazı Tarzları) scroll
+     from the top. */
+  justify-content: flex-start;
   overflow-y: auto !important;
 }
 
