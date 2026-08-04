@@ -62,7 +62,7 @@
      re-measures --menu-height whenever menu content changes (submenu toggles),
      which would otherwise shrink the panel (Kalite → ~246px) or balloon it
      (Altyazı Tarzları → ~828px). Keep in sync with the settings row count. */
-  --animecix-settings-height: 360px;
+  --animecix-settings-height: 284px;
   --media-tooltip-bg: rgba(10, 10, 10, 0.92);
   --media-tooltip-color: #fff;
   font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -161,6 +161,13 @@
   overflow-x: hidden !important;
 }
 
+/* Caption styles menu needs more vertical room for its sections (Font, Text,
+   Text Background, Display Background, Reset). Only this submenu gets the
+   taller height — Hız and Kalite keep the default. */
+.vds-settings-menu-items[data-root]:has(.vds-font-style-items[data-open]) {
+  height: 360px !important;
+}
+
 /* The open submenu's trigger row acts as the panel header (label + back
    navigation). It normally stays in the root's flow behind the anchored
    submenu — dimmed under the panel background and unclickable — so the first
@@ -178,9 +185,10 @@
   width: auto !important;
   z-index: 2 !important;
   /* Mask the scrolling list behind the header (Altyazı Tarzları). */
-  /* Fully transparent — no background, no border, just text over the video. */
+  /* Fully transparent — no background, just text over the video. A thin
+     bottom border marks the header boundary. */
   background: transparent !important;
-  border-bottom: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
 .vds-quick-submenu[data-open] {
