@@ -270,6 +270,23 @@
   background: linear-gradient(to top, rgba(0, 0, 0, 0.88), transparent 78%) !important;
 }
 
+/* Glass pill backgrounds behind bottom control button clusters */
+.vds-play-button,
+.vds-volume,
+.vds-time-group,
+.vds-caption-button,
+.vds-settings-menu,
+.vds-fullscreen-button {
+  background: rgba(0, 0, 0, 0.45) !important;
+  border-radius: 8px !important;
+  padding: 4px 8px !important;
+}
+
+/* Raise the progress bar closer to the button row */
+.vds-time-slider {
+  margin-bottom: -8px !important;
+}
+
 .vds-audio-menu {
   display: none !important;
 }
