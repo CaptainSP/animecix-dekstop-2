@@ -62,7 +62,7 @@
      re-measures --menu-height whenever menu content changes (submenu toggles),
      which would otherwise shrink the panel (Kalite → ~246px) or balloon it
      (Altyazı Tarzları → ~828px). Keep in sync with the settings row count. */
-  --animecix-settings-height: 284px;
+  --animecix-settings-height: 360px;
   --media-tooltip-bg: rgba(10, 10, 10, 0.92);
   --media-tooltip-color: #fff;
   font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
