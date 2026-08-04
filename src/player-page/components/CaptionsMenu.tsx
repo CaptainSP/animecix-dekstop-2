@@ -24,7 +24,7 @@ export function CaptionsMenu() {
   return (
     <Menu.Root className="vds-menu">
       <DefaultMenuButton label={label} hint={hint} Icon={icons.Menu.Captions} />
-      <Menu.Items className="vds-menu-items">
+      <Menu.Items className="vds-menu-items vds-quick-submenu">
         {/* WHY RadioGroup: bare Menu.Radio children have no radioControllerContext
             ancestor, so mount throws "Cannot read properties of undefined (reading 'add')". */}
         <Menu.RadioGroup className="vds-radio-group" role="radiogroup" value={options.selectedValue}>

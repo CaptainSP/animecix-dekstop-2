@@ -62,7 +62,8 @@
      re-measures --menu-height whenever menu content changes (submenu toggles),
      which would otherwise shrink the panel (Kalite → ~246px) or balloon it
      (Altyazı Tarzları → ~828px). Keep in sync with the settings row count. */
-  --animecix-settings-height: 284px;
+  /* Responsive: 55% of player height, clamped between 220–400px. */
+  --animecix-settings-height: clamp(220px, calc(var(--player-height) * 0.55), 400px);
   --media-tooltip-bg: rgba(10, 10, 10, 0.92);
   --media-tooltip-color: #fff;
   font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -165,7 +166,7 @@
    Text Background, Display Background, Reset). Only this submenu gets the
    taller height — Hız and Kalite keep the default. */
 .vds-settings-menu-items[data-root]:has(.vds-font-style-items[data-open]) {
-  height: 360px !important;
+  height: clamp(260px, calc(var(--player-height) * 0.65), 480px) !important;
 }
 
 /* The open submenu's trigger row acts as the panel header (label + back
