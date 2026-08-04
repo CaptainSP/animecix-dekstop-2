@@ -187,8 +187,9 @@
   /* With inset 0 and height auto the box sizes to its content and bottom: 0 is
      ignored, leaving a gap under the panel. Pin the height to fill the root. */
   height: 100% !important;
-  /* Header row (38px) + panel padding, so the list starts below the header. */
-  padding: calc(var(--media-menu-padding, 8px) + 38px) var(--media-menu-padding, 8px) var(--media-menu-padding, 8px) !important;
+  /* Header row (38px) + 6px gap + panel padding, so the list starts below
+     the header with a small breathing room. */
+  padding: calc(var(--media-menu-padding, 8px) + 38px + 6px) var(--media-menu-padding, 8px) var(--media-menu-padding, 8px) !important;
   display: flex;
   flex-direction: column;
   /* Align the list to the start — short lists (Kalite, Hız) sit flush at
@@ -198,11 +199,11 @@
   overflow-y: auto !important;
 }
 
-/* Tighter radio row spacing in the quick submenus: default rows are 38px
-   (18px text + 2×10px padding), bring them to 32px. */
+/* Slightly taller radio rows in the quick submenus: default rows are 38px
+   (18px text + 2×10px padding), bring them to 36px. */
 .vds-quick-submenu[data-open] .vds-radio {
-  padding-top: 7px !important;
-  padding-bottom: 7px !important;
+  padding-top: 9px !important;
+  padding-bottom: 9px !important;
 }
 
 /* Radio options cascade in right after the panel - each row a few ms later
