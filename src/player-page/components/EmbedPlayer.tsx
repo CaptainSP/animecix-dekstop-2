@@ -240,6 +240,50 @@ export function EmbedPlayer() {
     };
   }, [tracks]);
 
+  // Auto-select preferred fansub when tracks change (episode switch).
+  // Vidstack's `default` prop only fires on mount — this handles re-renders.
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player || tracks.length === 0) return;
+
+    const savedLang = localStorage.getItem('prefered_language');
+    const savedFansub = localStorage.getItem('prefered_fansub');
+    if (!savedLang) return;
+
+    // Wait briefly for tracks to register in vidstack
+    const timer = setTimeout(() => {
+      const textTracks = player.textTracks.toArray();
+      if (textTracks.length === 0) return;
+
+      // Already have a showing track? Don't override
+      const alreadyShowing = textTracks.some(
+        (t) => (t.kind === 'subtitles' || t.kind === 'captions') && t.mode === 'showing',
+      );
+      if (alreadyShowing) return;
+
+      // Try exact match: language + fansub name
+      let match = tracks.findIndex(
+        (t) => t.language === savedLang && t.fansub === savedFansub,
+      );
+
+      // Fallback: language only (first sub of that language)
+      if (match === -1) {
+        match = tracks.findIndex((t) => t.language === savedLang);
+      }
+
+      if (match === -1) return;
+
+      const target = textTracks.find(
+        (t) => (t.kind === 'subtitles' || t.kind === 'captions') && t.src === tracks[match].src,
+      );
+      if (target) {
+        target.mode = 'showing';
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [tracks]);
+
   // Disable context menu (prevents video URL exposure — T-02-12)
   useEffect(() => {
     document.oncontextmenu = (e) => e.preventDefault();
@@ -402,11 +446,7 @@ export function EmbedPlayer() {
               kind={track.kind}
               label={track.label}
               language={track.language}
-              default={
-                preferredFansub
-                  ? track.language === preferredLang && track.fansub === preferredFansub
-                  : track.language === preferredLang
-              }
+              default={false}
               type={track.type}
             />
           ))}
