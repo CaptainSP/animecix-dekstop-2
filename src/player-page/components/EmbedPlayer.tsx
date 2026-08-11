@@ -27,6 +27,8 @@ import { useVideoData } from '../hooks/useVideoData';
 import { useParentMessages, postToParent } from '../hooks/useParentMessages';
 import { useQualityPersistence } from '../hooks/useQualityPersistence';
 import { useVideoEnhancement } from '../hooks/useVideoEnhancement';
+import { useFrameInterpolation } from '../hooks/useFrameInterpolation';
+import { FrameInterpolationMenu } from './FrameInterpolationMenu';
 import { useLiveMode } from '../hooks/useLiveMode';
 import type { Video, SkipMeta } from '../types';
 import { useColorExtraction } from '../hooks/useColorExtraction';
@@ -77,6 +79,8 @@ export function EmbedPlayer() {
     isActive, hasOutput, stats, panelOpen, setPanelOpen,
   } = useVideoEnhancement(enhancementContainerRef);
 
+  const frameInterp = useFrameInterpolation();
+
   // changeVideo: reset time to 0 first, then fetch new video
   const changeVideo = useCallback(
     (videoId: string, videoVid?: string) => {
@@ -91,15 +95,17 @@ export function EmbedPlayer() {
     [fetchVideo]
   );
 
-  // Read preferred language from localStorage as fast default
+  // Read preferred language and fansub from localStorage
   // Note: 'prefered_language' is the tau-website spelling — kept for compatibility
   const preferredLang = localStorage.getItem('prefered_language') || 'tr';
+  const preferredFansub = localStorage.getItem('prefered_fansub') || '';
 
   const tracks = (data?.subs || []).map((sub) => ({
     kind: 'subtitles' as const,
     label: regionNamesInTurkish.of(sub.language) + ' - ' + sub.name,
     src: isIOS ? import.meta.env.VITE_API_BASE_URL + '/vtt/' + sub.id : sub.url,
     language: sub.language,
+    fansub: sub.name,
     type: (isIOS ? 'vtt' : 'ass') as 'vtt' | 'ass',
   }));
 
@@ -121,6 +127,43 @@ export function EmbedPlayer() {
 
     return () => {
       player.textRenderers.remove(renderer);
+    };
+  }, []);
+
+  // Preserve playback position across fullscreen transitions.
+  // HLS re-evaluates quality variants on viewport resize (fullscreen toggle),
+  // which can reset currentTime to 0 in "Otomatik" mode. This effect saves
+  // the position before the change and restores it if it gets reset.
+  useEffect(() => {
+    let savedTime = -1;
+    let restoreTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const onFsChange = () => {
+      const player = playerRef.current;
+      if (!player) return;
+
+      const isFs = !!document.fullscreenElement;
+      if (isFs) {
+        savedTime = player.currentTime;
+      } else if (savedTime > 0) {
+        const t = savedTime;
+        savedTime = -1;
+        const tryRestore = () => {
+          const p = playerRef.current;
+          if (p && p.currentTime < 1 && t > 1) {
+            p.currentTime = t;
+          }
+        };
+        tryRestore();
+        player.addEventListener('loadeddata', tryRestore, { once: true });
+        restoreTimer = setTimeout(tryRestore, 800);
+      }
+    };
+
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFsChange);
+      if (restoreTimer) clearTimeout(restoreTimer);
     };
   }, []);
 
@@ -149,6 +192,7 @@ export function EmbedPlayer() {
           target.mode = 'showing';
           // Update localStorage cache to match SQLite-loaded preference
           localStorage.setItem('prefered_language', tracks[index - 1].language);
+          localStorage.setItem('prefered_fansub', tracks[index - 1].fansub);
           postToParent('captionsChanged', { track: index });
         }
       }
@@ -183,6 +227,7 @@ export function EmbedPlayer() {
         if (idx !== -1) {
           // Update local cache
           localStorage.setItem('prefered_language', tracks[idx].language);
+          localStorage.setItem('prefered_fansub', tracks[idx].fansub);
           // Notify parent (animecix.tv) to persist to SQLite via IPC
           postToParent('captionsChanged', { track: idx + 1 });
         }
@@ -357,7 +402,11 @@ export function EmbedPlayer() {
               kind={track.kind}
               label={track.label}
               language={track.language}
-              default={track.language === preferredLang}
+              default={
+                preferredFansub
+                  ? track.language === preferredLang && track.fansub === preferredFansub
+                  : track.language === preferredLang
+              }
               type={track.type}
             />
           ))}
@@ -378,6 +427,7 @@ export function EmbedPlayer() {
             settingsMenuItemsStart: <FlatSettingsMenu />,
             settingsMenuItemsEnd: (
               <>
+                <FrameInterpolationMenu frameInterp={frameInterp} />
                 <CaptionStylesMenu />
                 <CaptionsMenu />
                 <QualityMenu />

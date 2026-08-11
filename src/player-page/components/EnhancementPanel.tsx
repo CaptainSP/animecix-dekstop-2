@@ -106,14 +106,12 @@ export function EnhancementPanel({
     const fitPanel = () => {
       const maxHeight = parseFloat(getComputedStyle(panel).maxHeight);
       const scale =
-        maxHeight > 0 && panel.scrollHeight > maxHeight
+        maxHeight > 0 && panel.scrollHeight > maxHeight * 1.2
           ? maxHeight / panel.scrollHeight
           : 1;
       panel.style.transformOrigin = 'bottom right';
       panel.style.transform = scale < 1 ? `scale(${scale})` : '';
-      panel.style.overflowY = scale < 1 ? 'hidden' : 'auto';
-      // When fitted, drop the entrance animation (it would override the
-      // inline scale transform via its fill-mode keyframes).
+      panel.style.overflowY = 'auto';
       panel.classList.toggle('ve-panel-fit', scale < 1);
     };
 

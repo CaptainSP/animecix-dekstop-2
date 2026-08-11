@@ -619,3 +619,50 @@
     padding-right: 12px;
   }
 }
+
+/* ── Frame interpolation compact switch (settings menu) ────────────── */
+
+.ve-switch-compact {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  min-width: 36px;
+  max-width: 36px;
+  min-height: 20px;
+  max-height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: background 0.2s ease;
+  flex: 0 0 36px;
+  overflow: hidden;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.ve-switch-compact.on {
+  background: #0074E4;
+}
+
+.ve-switch-compact.loading {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ve-switch-compact-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.ve-switch-compact.on .ve-switch-compact-thumb {
+  transform: translateX(16px);
+}
