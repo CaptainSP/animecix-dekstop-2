@@ -242,7 +242,6 @@ export function EmbedPlayer() {
 
   // Auto-select preferred fansub when tracks change (episode switch).
   // Vidstack's `default` prop only fires on mount — this handles re-renders.
-  // We ALWAYS force-select because vidstack auto-selects the first track on load.
   useEffect(() => {
     const player = playerRef.current;
     if (!player || tracks.length === 0) return;
@@ -251,43 +250,38 @@ export function EmbedPlayer() {
     const savedFansub = localStorage.getItem('prefered_fansub');
     if (!savedLang) return;
 
-    // Wait for tracks to register in vidstack — poll until ready
-    let attempts = 0;
-    const timer = setInterval(() => {
-      attempts++;
+    // Wait briefly for tracks to register in vidstack
+    const timer = setTimeout(() => {
       const textTracks = player.textTracks.toArray();
-      if (textTracks.length === 0 && attempts < 20) return;
+      if (textTracks.length === 0) return;
 
-      clearInterval(timer);
+      // Already have a showing track? Don't override
+      const alreadyShowing = textTracks.some(
+        (t) => (t.kind === 'subtitles' || t.kind === 'captions') && t.mode === 'showing',
+      );
+      if (alreadyShowing) return;
 
       // Try exact match: language + fansub name
-      let matchIdx = tracks.findIndex(
+      let match = tracks.findIndex(
         (t) => t.language === savedLang && t.fansub === savedFansub,
       );
 
       // Fallback: language only (first sub of that language)
-      if (matchIdx === -1) {
-        matchIdx = tracks.findIndex((t) => t.language === savedLang);
+      if (match === -1) {
+        match = tracks.findIndex((t) => t.language === savedLang);
       }
 
-      if (matchIdx === -1) return;
+      if (match === -1) return;
 
-      // Find matching vidstack text track and force-enable it
-      const target = player.textTracks.toArray().find(
-        (t) => (t.kind === 'subtitles' || t.kind === 'captions') && t.src === tracks[matchIdx].src,
+      const target = textTracks.find(
+        (t) => (t.kind === 'subtitles' || t.kind === 'captions') && t.src === tracks[match].src,
       );
       if (target) {
-        // Disable all other tracks first
-        for (const t of player.textTracks.toArray()) {
-          if (t.kind === 'subtitles' || t.kind === 'captions') {
-            t.mode = 'disabled';
-          }
-        }
         target.mode = 'showing';
       }
-    }, 150);
+    }, 300);
 
-    return () => clearInterval(timer);
+    return () => clearTimeout(timer);
   }, [tracks]);
 
   // Disable context menu (prevents video URL exposure — T-02-12)
