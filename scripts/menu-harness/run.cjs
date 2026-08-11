@@ -150,6 +150,18 @@ app.whenReady().then(async () => {
   })()`);
   console.log('BACK STATE:', JSON.stringify(backState));
 
+  const controlsDump = await js(`(function(){
+    var controls = document.querySelector('.vds-controls');
+    if (!controls) return null;
+    var groups = [...controls.querySelectorAll(':scope > .vds-controls-group')];
+    return groups.map((g, i) => {
+      var children = [...g.children].map((c) => ({ tag: c.tagName, cls: String(c.className).slice(0, 50) }));
+      var r = g.getBoundingClientRect();
+      return { index: i, top: Math.round(r.top), bottom: Math.round(r.bottom), height: Math.round(r.height), childCount: children.length, children: children.slice(0, 6) };
+    });
+  })()`);
+  console.log('CONTROLS:', JSON.stringify(controlsDump, null, 1));
+
   await sleep(200);
   app.exit(0);
 }).catch((err) => {
