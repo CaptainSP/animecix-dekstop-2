@@ -95,17 +95,15 @@ export function EmbedPlayer() {
     [fetchVideo]
   );
 
-  // Read preferred language and fansub from localStorage
+  // Read preferred language from localStorage as fast default
   // Note: 'prefered_language' is the tau-website spelling — kept for compatibility
   const preferredLang = localStorage.getItem('prefered_language') || 'tr';
-  const preferredFansub = localStorage.getItem('prefered_fansub') || '';
 
   const tracks = (data?.subs || []).map((sub) => ({
     kind: 'subtitles' as const,
     label: regionNamesInTurkish.of(sub.language) + ' - ' + sub.name,
     src: isIOS ? import.meta.env.VITE_API_BASE_URL + '/vtt/' + sub.id : sub.url,
     language: sub.language,
-    fansub: sub.name,
     type: (isIOS ? 'vtt' : 'ass') as 'vtt' | 'ass',
   }));
 
@@ -192,7 +190,6 @@ export function EmbedPlayer() {
           target.mode = 'showing';
           // Update localStorage cache to match SQLite-loaded preference
           localStorage.setItem('prefered_language', tracks[index - 1].language);
-          localStorage.setItem('prefered_fansub', tracks[index - 1].fansub);
           postToParent('captionsChanged', { track: index });
         }
       }
@@ -227,7 +224,6 @@ export function EmbedPlayer() {
         if (idx !== -1) {
           // Update local cache
           localStorage.setItem('prefered_language', tracks[idx].language);
-          localStorage.setItem('prefered_fansub', tracks[idx].fansub);
           // Notify parent (animecix.tv) to persist to SQLite via IPC
           postToParent('captionsChanged', { track: idx + 1 });
         }
@@ -402,11 +398,7 @@ export function EmbedPlayer() {
               kind={track.kind}
               label={track.label}
               language={track.language}
-              default={
-                preferredFansub
-                  ? track.language === preferredLang && track.fansub === preferredFansub
-                  : track.language === preferredLang
-              }
+              default={track.language === preferredLang}
               type={track.type}
             />
           ))}
